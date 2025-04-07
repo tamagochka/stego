@@ -1,11 +1,11 @@
 import os
 from random import random
 
-from numpy import uint8, copy, empty, ndarray, asarray, fromfile, concatenate, array_split, dstack
+from numpy import uint8, copy, empty, asarray, fromfile, concatenate, array_split, dstack
 from PIL import Image
 
-from utils import D2B, B2D, chars2bytes, bytes2chars, to_bit_vector, from_bit_vector
 from config import AppCongig
+from utils import D2B, B2D, chars2bytes, bytes2chars, to_bit_vector, from_bit_vector
 
 
 # метки начала и конца места погружения вложения в покрывающий объект
@@ -15,9 +15,9 @@ defualt_end_label: str = 'k0HEU'
 
 def LSB_embedding(
         app_config: AppCongig,
-        cover_file_name: str,
-        stego_file_name: str,
-        message_file_name: str,
+        cover_file_path: str,
+        stego_file_path: str,
+        message_file_path: str,
         start_label: str = default_start_label,
         end_label: str = defualt_end_label,
         fill_rest: bool = True):
@@ -28,12 +28,12 @@ def LSB_embedding(
     ----------
         app_config: AppConfig
             глобальная конфигурация приложения
-        cover_file_name: str
-            имя/путь к покрывающему объекту
+        cover_file_path: str
+            путь к покрывающему объекту
         stego_file_name: str
-            имя/путь к стеганограмме
+            путь к стеганограмме
         message_file_name: str
-            имя/путь к файлу вложения
+            путь к файлу вложения
         start_label: str = 'H@4@l0'
             метка начала места погружения
         end_label: str = 'k0HEU'
@@ -44,21 +44,11 @@ def LSB_embedding(
 
     # загрузка покрывающего объекта
     cover_object = None
-    cover_file_path = None
-    if app_config.covers_folder:
-        cover_file_path = os.path.join(app_config.covers_folder, cover_file_name)
-    else:
-        cover_file_path = cover_file_name
     with Image.open(cover_file_path) as F:
         cover_object = asarray(F, dtype=uint8)
 
     # загрузка вложения
     message_object = None
-    message_file_path = None
-    if app_config.messages_folder:
-        message_file_path = os.path.join(app_config.messages_folder, message_file_name)
-    else:
-        message_file_path = message_file_name
     with open(message_file_path, 'rb') as F:
         message_object = fromfile(F, dtype=uint8)
         message_file_name = os.path.basename(F.name)
@@ -128,18 +118,13 @@ def LSB_embedding(
     #         print(c, ' - ', s, '+' if c != s else ' ')
     #     print()
 
-    stego_file_path = None
-    if app_config.stegos_folder:
-        stego_file_path = os.path.join(app_config.stegos_folder, stego_file_name)
-    else:
-        stego_file_path = stego_file_name
     with Image.fromarray(stego_object) as F:
         F.save(stego_file_path)
 
 
 def LSB_extracting(
         app_config: AppCongig,
-        stego_file_name: str,
+        stego_file_path: str,
         start_label: str = default_start_label,
         end_label: str = defualt_end_label):
     """
@@ -159,11 +144,6 @@ def LSB_extracting(
     
     # загрузка стеганограммы
     stego_object = None
-    stego_file_path = None
-    if app_config.stegos_folder:
-        stego_file_path = os.path.join(app_config.stegos_folder, stego_file_name)
-    else:
-        stego_file_path = stego_file_name
     with Image.open(stego_file_path, 'r') as F:
         stego_object = asarray(F, dtype=uint8)
 
@@ -191,10 +171,7 @@ def LSB_extracting(
     message_file_name_len = chars2bytes(message[0])[0]
     message_file_name = message[1:message_file_name_len + 1]
 
-    if app_config.messages_folder:
-        message_file_path = os.path.join(app_config.extracts_folder, message_file_name)
-    else:
-        message_file_path = message_file_name
+    message_file_path = app_config.get_extracts_file_path(message_file_name)
     with open(message_file_path, 'bw') as F:
         F.write(chars2bytes(message[message_file_name_len + 1:]))
 

@@ -7,6 +7,18 @@ from dataclasses import dataclass
 import toml
 
 
+def check_dir(dir_name: str):
+    if dir_name:
+        if not os.path.isdir(dir_name):
+            os.makedirs(dir_name)
+
+def get_file_path(folder_name: str, file_name: str):
+    file_path = file_name
+    if folder_name:
+        file_path = os.path.join(folder_name, file_name)
+    return file_path
+
+
 @dataclass
 class AppCongig(object):
     """
@@ -141,19 +153,25 @@ class AppCongig(object):
             format=self.log_format,
             handlers=handlers_list
         )
-        if self.extracts_folder:
-            if not os.path.isdir(self.extracts_folder):
-                os.makedirs(self.extracts_folder)
-        if self.covers_folder:
-            if not os.path.isdir(self.covers_folder):
-                os.makedirs(self.covers_folder)
-        if self.stegos_folder:
-            if not os.path.isdir(self.stegos_folder):
-                os.makedirs(self.stegos_folder)
-        if self.messages_folder:
-            if not os.path.isdir(self.messages_folder):
-                os.makedirs(self.messages_folder)
-        if self.analysis_folder:
-            if not os.path.isdir(self.analysis_folder):
-                os.makedirs(self.analysis_folder)
+        check_dir(self.extracts_folder)
+        check_dir(self.covers_folder)
+        check_dir(self.stegos_folder)
+        check_dir(self.messages_folder)
+        check_dir(self.analysis_folder)
+   
+
+    def get_extracts_file_path(self, file_name: str) -> str:
+        return get_file_path(self.extracts_folder, file_name)
+    
+    def get_covers_file_path(self, file_name: str) -> str:
+        return get_file_path(self.covers_folder, file_name)
+
+    def get_stegos_file_path(self, file_name: str) -> str:
+        return get_file_path(self.stegos_folder, file_name)
+
+    def get_messages_file_path(self, file_name: str) -> str:
+        return get_file_path(self.messages_folder, file_name)
+
+    def get_analysis_file_path(self, file_name: str) -> str:
+        return get_file_path(self.analysis_folder, file_name)
 

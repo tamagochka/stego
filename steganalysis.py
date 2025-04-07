@@ -6,12 +6,7 @@ import matplotlib.pyplot as plt
 from config import AppCongig
 
 
-def visual_attack(app_config: AppCongig, stego_file_name: str, result_file_name: str = None):
-    stego_file_path = None
-    if app_config.stegos_folder:
-        stego_file_path = os.path.join(app_config.stegos_folder, stego_file_name)
-    else:
-        stego_file_path = stego_file_name
+def visual_attack(app_config: AppCongig, stego_file_path: str, result_file_path: str = None):
     with Image.open(stego_file_path) as F:
         stego_object = asarray(F, dtype=uint8)
 
@@ -32,13 +27,8 @@ def visual_attack(app_config: AppCongig, stego_file_name: str, result_file_name:
     ax[2].set_title('blue plane')
     ax[2].imshow(LSB_plane_blue, cmap='gray')
     
-    if result_file_name:
-        result_file_name = result_file_name + '.png'
-        result_file_path = None
-        if app_config.analysis_folder:
-            result_file_path = os.path.join(app_config.analysis_folder, result_file_name)
-        else:
-            result_file_path = result_file_name
+    if result_file_path:
+        result_file_path = result_file_path + '.png'
         plt.savefig(result_file_path)
     else:
         plt.show()

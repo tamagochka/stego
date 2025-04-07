@@ -14,35 +14,41 @@ from steganalysis import visual_attack
 
 
 def embeding(args: Namespace, app_config: AppCongig):
-    cover_file_name = args.cover
-    stego_file_name = args.stego
-    message_file_name = args.message
+    cover_file_path = app_config.get_covers_file_path(args.cover)
+    stego_file_path = app_config.get_stegos_file_path(args.stego)
+    message_file_path = app_config.get_messages_file_path(args.message)
     algorithm = args.algorithm
 
     match algorithm:
         case 'lsb':
-            stego_vect = LSB_embedding(app_config,cover_file_name, stego_file_name, message_file_name, fill_rest=True)
+            stego_vect = LSB_embedding(
+                app_config,
+                cover_file_path,
+                stego_file_path,
+                message_file_path,
+                fill_rest=True
+            )
     #     case '2':
     #         stego_vect = LSB_PRI_embedding(cover_vect, message_bits, 1)
 
 
 def extracting(args: Namespace, app_config: AppCongig):
-    stego_file_name = args.stego
+    stego_file_path = app_config.get_stegos_file_path(args.stego)
     algorithm = args.algorithm
 
     match algorithm:
         case 'lsb':
-            message_bits = LSB_extracting(app_config, stego_file_name)
+            message_bits = LSB_extracting(app_config, stego_file_path)
 
 
 def analysis(args: Namespace, app_config: AppCongig):
     algorithm = args.algorithm
-    stego_file_name = args.stego
-    result_file_name = args.result
+    stego_file_path = app_config.get_stegos_file_path(args.stego)
+    result_file_path = app_config.get_analysis_file_path(args.result)
 
     match algorithm:
         case 'visual':
-            visual_attack(app_config, stego_file_name, result_file_name)
+            visual_attack(app_config, stego_file_path, result_file_path)
 
 
 if __name__ == '__main__':

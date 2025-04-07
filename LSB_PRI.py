@@ -1,9 +1,22 @@
 from random import seed, randint
-from numpy import copy, empty, uint8
+
+from PIL import Image
+from numpy import copy, empty, uint8, asarray
+
+from config import AppCongig
 from utils import D2B, B2D
 
 
-def LSB_PRI_embedding(cover, message_bits, key, min_step=1, max_step=8):
+def LSB_PRI_embedding(
+        app_config: AppConfig,
+        cover_file_name: str,
+        stego_file_name: str,
+        message_file_name: str,
+        start_label: str = default_start_label,
+        end_label: str = default_end_label,
+        key: int = 0,
+        min_step: int = 1,
+        max_step: int = 8):
     """
 
     :param cover:
@@ -13,6 +26,13 @@ def LSB_PRI_embedding(cover, message_bits, key, min_step=1, max_step=8):
     :param max_step:
     :return:
     """
+
+    # загрузка покрывающего объекта
+    cover_object = None
+    cover_file_path = app_config.get_cover_file_path(cover_file_name)
+    with Image.open(cover_file_path) as F:
+        cover_object = asarray(F, dtype=uint8)
+    
 
     message_len = len(message_bits)
     stego = copy(cover)
