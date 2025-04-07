@@ -141,15 +141,19 @@ class AppCongig(object):
             format=self.log_format,
             handlers=handlers_list
         )
-
-        if not os.path.isdir(self.extracts_folder):
-            os.makedirs(self.extracts_folder)
-        if not os.path.isdir(self.covers_folder):
-            os.makedirs(self.covers_folder)
-        if not os.path.isdir(self.stegos_folder):
-            os.makedirs(self.stegos_folder)
-        if not os.path.isdir(self.messages_folder):
-            os.makedirs(self.messages_folder)
-        if not os.path.isdir(self.analysis_folder):
-            os.makedirs(self.analysis_folder)
+        if self.extracts_folder:
+            if not os.path.isdir(self.extracts_folder):
+                os.makedirs(self.extracts_folder)
+        if self.covers_folder:
+            if not os.path.isdir(self.covers_folder):
+                os.makedirs(self.covers_folder)
+        if self.stegos_folder:
+            if not os.path.isdir(self.stegos_folder):
+                os.makedirs(self.stegos_folder)
+        if self.messages_folder:
+            if not os.path.isdir(self.messages_folder):
+                os.makedirs(self.messages_folder)
+        if self.analysis_folder:
+            if not os.path.isdir(self.analysis_folder):
+                os.makedirs(self.analysis_folder)
 
