@@ -1,10 +1,9 @@
 import os
 from random import random
 
-from numpy import uint8, copy, empty, asarray, fromfile, concatenate, array_split, dstack
 from PIL import Image
+from numpy import uint8, copy, empty, asarray, fromfile, concatenate, array_split, dstack
 
-from config import AppCongig
 from utils import D2B, B2D, chars2bytes, bytes2chars, to_bit_vector, from_bit_vector
 
 
@@ -14,25 +13,23 @@ defualt_end_label: str = 'k0HEU'
 
 
 def LSB_embedding(
-        app_config: AppCongig,
         cover_file_path: str,
         stego_file_path: str,
         message_file_path: str,
         start_label: str = default_start_label,
         end_label: str = defualt_end_label,
-        fill_rest: bool = True):
+        fill_rest: bool = True
+    ):
     """
-    Встраивание в НЗБ с непрерывным замещением
+    Встраивание в НЗБ с непрерывным замещением.
 
     Parameters
     ----------
-        app_config: AppConfig
-            глобальная конфигурация приложения
         cover_file_path: str
             путь к покрывающему объекту
-        stego_file_name: str
+        stego_file_path: str
             путь к стеганограмме
-        message_file_name: str
+        message_file_path: str
             путь к файлу вложения
         start_label: str = 'H@4@l0'
             метка начала места погружения
@@ -123,19 +120,20 @@ def LSB_embedding(
 
 
 def LSB_extracting(
-        app_config: AppCongig,
         stego_file_path: str,
+        extract_file_path: str,
         start_label: str = default_start_label,
-        end_label: str = defualt_end_label):
+        end_label: str = defualt_end_label
+    ):
     """
-    Извлечение из НЗБ с непрерывным замещением
+    Извлечение из НЗБ с непрерывным замещением.
 
     Parameters
     ----------
-        app_config: AppCongig,
-            глобальная конфигурация приложения
-        stego_file_name: str,
+        stego_file_path: str
             имя/путь к стеганограмме
+        extract_file_path: str
+            путь к файлу вложения (только директория)
         start_label: str = 'H@4@l0'
             метка начала места погружения
         end_label: str = 'k0HEU'
@@ -168,10 +166,11 @@ def LSB_extracting(
     message_bytes = from_bit_vector(message_bits)
     message = bytes2chars(message_bytes)
     message = message[message.find(start_label) + len(start_label):message.find(end_label)]
+
     message_file_name_len = chars2bytes(message[0])[0]
     message_file_name = message[1:message_file_name_len + 1]
 
-    message_file_path = app_config.get_extracts_file_path(message_file_name)
+    message_file_path = os.path.join(extract_file_path, message_file_name)
     with open(message_file_path, 'bw') as F:
         F.write(chars2bytes(message[message_file_name_len + 1:]))
 

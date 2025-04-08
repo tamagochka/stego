@@ -12,15 +12,18 @@ def check_dir(dir_name: str):
         if not os.path.isdir(dir_name):
             os.makedirs(dir_name)
 
+
 def get_file_path(folder_name: str, file_name: str):
     file_path = file_name
     if folder_name:
+        file_path = folder_name
+    if folder_name and file_name:
         file_path = os.path.join(folder_name, file_name)
     return file_path
 
 
 @dataclass
-class AppCongig(object):
+class AppConfig(object):
     """
     Класс для хранения конфигурации приложения
     
@@ -160,18 +163,18 @@ class AppCongig(object):
         check_dir(self.analysis_folder)
    
 
-    def get_extracts_file_path(self, file_name: str) -> str:
+    def get_extracts_file_path(self, file_name: str = None) -> str:
         return get_file_path(self.extracts_folder, file_name)
     
-    def get_covers_file_path(self, file_name: str) -> str:
+    def get_covers_file_path(self, file_name: str = None) -> str:
         return get_file_path(self.covers_folder, file_name)
 
-    def get_stegos_file_path(self, file_name: str) -> str:
+    def get_stegos_file_path(self, file_name: str = None) -> str:
         return get_file_path(self.stegos_folder, file_name)
 
-    def get_messages_file_path(self, file_name: str) -> str:
+    def get_messages_file_path(self, file_name: str = None) -> str:
         return get_file_path(self.messages_folder, file_name)
 
-    def get_analysis_file_path(self, file_name: str) -> str:
+    def get_analysis_file_path(self, file_name: str = None) -> str:
         return get_file_path(self.analysis_folder, file_name)
 

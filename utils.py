@@ -135,9 +135,6 @@ def chars2bytes(vector_chars: str) -> ndarray[uint8]:
     return array([ord(ch) for ch in list(vector_chars)], dtype=uint8)
 
 
-
-
-
 # алфавит источника сообщения, можно переставить символы по определенному закону для большей защищенности
 def alphagen(Na):
     A = array([i - 1 for i in range(0, Na)], dtype=uint8)  # значения элементов сместили на 1 влево
@@ -149,16 +146,6 @@ def alphagen(Na):
 def keygen(K, Nm):
     # k = array(list(K))
     return array([ord(array(list(K))[i % len(K)]) for i in range(Nm)], dtype=uint8)
-
-
-# генерация псевдослучайного интервала для алгоритма LSB_PRI
-# шаг между измененными пикселями будет задаваться количеством единиц в двоичном представлении
-# номера последнего модифицированного байта помноженное на масштабирующий коэффициент k
-def step(x, k):
-    s = 0
-    for i in range(len(x)):
-        s += x[i]
-    return k * s
 
 
 def keypairgen(Ko, K):

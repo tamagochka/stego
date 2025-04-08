@@ -4,8 +4,9 @@ from argparse import Namespace
 
 # from numpy import set_printoptions, inf
 
-from config import AppCongig
+from config import AppConfig
 from LSB import LSB_embedding, LSB_extracting
+from LSB_PRI import LSB_PRI_embedding, LSB_PRI_extracting
 from steganalysis import visual_attack
 
 
@@ -13,7 +14,7 @@ from steganalysis import visual_attack
 # set_printoptions(linewidth=inf)
 
 
-def embeding(args: Namespace, app_config: AppCongig):
+def embeding(args: Namespace, app_config: AppConfig):
     cover_file_path = app_config.get_covers_file_path(args.cover)
     stego_file_path = app_config.get_stegos_file_path(args.stego)
     message_file_path = app_config.get_messages_file_path(args.message)
@@ -21,34 +22,40 @@ def embeding(args: Namespace, app_config: AppCongig):
 
     match algorithm:
         case 'lsb':
-            stego_vect = LSB_embedding(
-                app_config,
+            LSB_embedding(
                 cover_file_path,
                 stego_file_path,
                 message_file_path,
                 fill_rest=True
             )
-    #     case '2':
-    #         stego_vect = LSB_PRI_embedding(cover_vect, message_bits, 1)
+        case 'pri':
+            LSB_PRI_embedding(
+                cover_file_path,
+                stego_file_path,
+                message_file_path
+            )
 
 
-def extracting(args: Namespace, app_config: AppCongig):
+def extracting(args: Namespace, app_config: AppConfig):
     stego_file_path = app_config.get_stegos_file_path(args.stego)
+    extract_file_path = app_config.get_extracts_file_path()
     algorithm = args.algorithm
 
     match algorithm:
         case 'lsb':
-            message_bits = LSB_extracting(app_config, stego_file_path)
+            LSB_extracting(stego_file_path, extract_file_path)
+        case 'pri':
+            LSB_PRI_extracting(stego_file_path, extract_file_path)
 
 
-def analysis(args: Namespace, app_config: AppCongig):
+def analysis(args: Namespace, app_config: AppConfig):
     algorithm = args.algorithm
     stego_file_path = app_config.get_stegos_file_path(args.stego)
-    result_file_path = app_config.get_analysis_file_path(args.result)
+    result_file_path = app_config.get_analysis_file_path(args.result) if args.result else None
 
     match algorithm:
         case 'visual':
-            visual_attack(app_config, stego_file_path, result_file_path)
+            visual_attack(stego_file_path, result_file_path)
 
 
 if __name__ == '__main__':
@@ -86,7 +93,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     
-    app_config = AppCongig(config_file=args.config)
+    app_config = AppConfig(config_file=args.config)
     app_config.apply_config()
 
     args.func(args, app_config)
