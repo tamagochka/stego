@@ -7,7 +7,7 @@ from argparse import Namespace
 from config import AppConfig
 from LSB import LSB_embedding, LSB_extracting
 from LSB_PRI import LSB_PRI_embedding, LSB_PRI_extracting
-from steganalysis import visual_attack
+from steganalysing import visual_attack
 
 
 # set_printoptions(threshold=inf)
@@ -64,7 +64,7 @@ def extracting(args: Namespace, app_config: AppConfig):
             )
 
 
-def analysis(args: Namespace, app_config: AppConfig):
+def analysing(args: Namespace, app_config: AppConfig):
     stego_file_path = app_config.get_stegos_file_path(args.stego)
     result_file_path = app_config.get_analysis_file_path(args.result) if args.result else None
     algorithm = args.algorithm
@@ -76,7 +76,7 @@ def analysis(args: Namespace, app_config: AppConfig):
         case 'visual':
             visual_attack(
                 stego_file_path,
-                result_file_path
+                result_file_path,
                 **params if params else {}
             )
 
@@ -87,8 +87,8 @@ if __name__ == '__main__':
     parser.add_argument('-cfg', '--config', type=str, help='Путь к файлу конфигурации в формате toml.', default=None)
     subparsers = parser.add_subparsers()
 
-    parser_embed = subparsers.add_parser('embed', help='Погружение информации.', formatter_class=argparse.RawTextHelpFormatter)
-    parser_embed.add_argument('-a', '--algorithm', type=str,
+    parser_embeding = subparsers.add_parser('embeding', help='Погружение информации.', formatter_class=argparse.RawTextHelpFormatter)
+    parser_embeding.add_argument('-a', '--algorithm', type=str,
                               help='Алгоритм, используемый для погружения вложения в покрывающий объект.\n' \
                                    'Поддерживаемые алгоритмы:\n' \
                                         '\tlsb - погружение информации в плоскость наименее значащих бит (НЗБ) с непрерывным заполнением.\n' \
@@ -102,19 +102,19 @@ if __name__ == '__main__':
                                                 '\t\t\tend_label:str - метка конца места погружения;\n' \
                                                 '\t\t\tkey:int - ключ, задающий масштабирование шага встраивания;' \
                                                 '\t\t\tfill_rest - заполнять незаполненную часть покрывающего объекта случайными битами.')
-    parser_embed.add_argument('-p', '--params', type=str, help='Параметры алгоритма, используемого для погружения.')
-    parser_embed.add_argument('-c', '--cover', type=str, help='Путь к файлу - покрывающему объекту (контейнеру),\
+    parser_embeding.add_argument('-p', '--params', type=str, help='Параметры алгоритма, используемого для погружения.')
+    parser_embeding.add_argument('-c', '--cover', type=str, help='Путь к файлу - покрывающему объекту (контейнеру),\
                                в который осуществляется погружение (встраивание) вложения (скрываемой информации).\
                               Поддерживаемые типы файлов: bmp.')
-    parser_embed.add_argument('-m', '--message', type=str, help='Путь к файлу вложению (скрываемой информации),\
+    parser_embeding.add_argument('-m', '--message', type=str, help='Путь к файлу вложению (скрываемой информации),\
                               которое погружается (встраивается) в покрывающий объект (контейнер).\
                               Поддерживаются любые типы файлов.')
-    parser_embed.add_argument('-s', '--stego', type=str, help='Путь к файлу - стеганограмме результату погруженния вложения в покрывающий объект.')
-    parser_embed.set_defaults(func=embeding)
+    parser_embeding.add_argument('-s', '--stego', type=str, help='Путь к файлу - стеганограмме результату погруженния вложения в покрывающий объект.')
+    parser_embeding.set_defaults(func=embeding)
 
 
-    parser_extract = subparsers.add_parser('extract', help='Извлечение информации.', formatter_class=argparse.RawTextHelpFormatter)
-    parser_extract.add_argument('-a', '--algorithm', type=str,
+    parser_extracting = subparsers.add_parser('extracting', help='Извлечение информации.', formatter_class=argparse.RawTextHelpFormatter)
+    parser_extracting.add_argument('-a', '--algorithm', type=str,
                                 help='Алгоритм, который был использован для погружения.\n' \
                                      'Поддерживаемые алгоритмы:\n' \
                                         '\tlsb - извлечение информации из плоскости наименее значащих бит (НЗБ) с непрерывным заполнением.\n' \
@@ -126,20 +126,20 @@ if __name__ == '__main__':
                                                 '\t\t\tstart_label:int - место начала погружения;\n' \
                                                 '\t\t\tend_label:str - метка конца места погружения;\n' \
                                                 '\t\t\tkey:int - ключ, задающий масштабирование шага встраивания.')
-    parser_extract.add_argument('-p', '--params', type=str, help='Параметры алгоритма, используемого для извлечения.')
-    parser_extract.add_argument('-s', '--stego', type=str, help='Стеганограмма из которого осуществляется извлечение вложения (скрытой в ней информации).\
+    parser_extracting.add_argument('-p', '--params', type=str, help='Параметры алгоритма, используемого для извлечения.')
+    parser_extracting.add_argument('-s', '--stego', type=str, help='Стеганограмма из которого осуществляется извлечение вложения (скрытой в ней информации).\
                                 Поддерживаемые типы файлов: bmp.')
-    parser_extract.set_defaults(func=extracting)
+    parser_extracting.set_defaults(func=extracting)
 
 
-    parser_analysis = subparsers.add_parser('analysis', help='Стеганографический анализ.', formatter_class=argparse.RawTextHelpFormatter)
-    parser_analysis.add_argument('-a', '--algorithm', type=str, help='Алгоритм, используемый для анализа.\
+    parser_analysing = subparsers.add_parser('analysing', help='Стеганографический анализ.', formatter_class=argparse.RawTextHelpFormatter)
+    parser_analysing.add_argument('-a', '--algorithm', type=str, help='Алгоритм, используемый для анализа.\
                                  Поддерживаемые алгоритмы стегоанализа: visual.')
-    parser_analysis.add_argument('-p', '--params', type=str, help='Параметры алгоритма, используемого для анализа.')
-    parser_analysis.add_argument('-s', '--stego', type=str, help='Файл, который будет подвергнут стеганографическому анализу (предполагаемая стеганограмма).\
+    parser_analysing.add_argument('-p', '--params', type=str, help='Параметры алгоритма, используемого для анализа.')
+    parser_analysing.add_argument('-s', '--stego', type=str, help='Файл, который будет подвергнут стеганографическому анализу (предполагаемая стеганограмма).\
                                  Поддерживаемые типы файлов: bmp.')
-    parser_analysis.add_argument('-r', '--result', type=str, help='Файл с результатами анализа. Тип файла, зависит от используемого алгоритма.')
-    parser_analysis.set_defaults(func=analysis)
+    parser_analysing.add_argument('-r', '--result', type=str, help='Файл с результатами анализа. Тип файла, зависит от используемого алгоритма.')
+    parser_analysing.set_defaults(func=analysing)
 
     args = parser.parse_args()
     
