@@ -14,7 +14,7 @@ from steganalysing import visual_attack
 # set_printoptions(linewidth=inf)
 
 
-def embeding(args: Namespace, app_config: AppConfig):
+def embedding(args: Namespace, app_config: AppConfig):
     cover_file_path = app_config.get_covers_file_path(args.cover) if args.cover else None
     stego_file_path = app_config.get_stegos_file_path(args.stego) if args.stego else None
     message_file_path = app_config.get_messages_file_path(args.message) if args.message else None
@@ -59,7 +59,7 @@ def extracting(args: Namespace, app_config: AppConfig):
         case 'pri':
             LSB_PRI_extracting(
                 stego_file_path,
-                extract_file_path
+                extract_file_path,
                 **params if params else {}
             )
 
@@ -87,8 +87,8 @@ if __name__ == '__main__':
     parser.add_argument('-cfg', '--config', type=str, help='Путь к файлу конфигурации в формате toml.', default=None)
     subparsers = parser.add_subparsers()
 
-    parser_embeding = subparsers.add_parser('embeding', help='Погружение информации.', formatter_class=argparse.RawTextHelpFormatter)
-    parser_embeding.add_argument('-a', '--algorithm', type=str,
+    parser_embedding = subparsers.add_parser('embedding', help='Погружение информации.', formatter_class=argparse.RawTextHelpFormatter)
+    parser_embedding.add_argument('-a', '--algorithm', type=str,
                               help='Алгоритм, используемый для погружения вложения в покрывающий объект.\n' \
                                    'Поддерживаемые алгоритмы:\n' \
                                         '\tlsb - погружение информации в плоскость наименее значащих бит (НЗБ) с непрерывным заполнением.\n' \
@@ -102,15 +102,15 @@ if __name__ == '__main__':
                                                 '\t\t\tend_label:str - метка конца места погружения;\n' \
                                                 '\t\t\tkey:int - ключ, задающий масштабирование шага встраивания;' \
                                                 '\t\t\tfill_rest - заполнять незаполненную часть покрывающего объекта случайными битами.')
-    parser_embeding.add_argument('-p', '--params', type=str, help='Параметры алгоритма, используемого для погружения.')
-    parser_embeding.add_argument('-c', '--cover', type=str, help='Путь к файлу - покрывающему объекту (контейнеру),\
+    parser_embedding.add_argument('-p', '--params', type=str, help='Параметры алгоритма, используемого для погружения.')
+    parser_embedding.add_argument('-c', '--cover', type=str, help='Путь к файлу - покрывающему объекту (контейнеру),\
                                в который осуществляется погружение (встраивание) вложения (скрываемой информации).\
                               Поддерживаемые типы файлов: bmp.')
-    parser_embeding.add_argument('-m', '--message', type=str, help='Путь к файлу вложению (скрываемой информации),\
+    parser_embedding.add_argument('-m', '--message', type=str, help='Путь к файлу вложению (скрываемой информации),\
                               которое погружается (встраивается) в покрывающий объект (контейнер).\
                               Поддерживаются любые типы файлов.')
-    parser_embeding.add_argument('-s', '--stego', type=str, help='Путь к файлу - стеганограмме результату погруженния вложения в покрывающий объект.')
-    parser_embeding.set_defaults(func=embeding)
+    parser_embedding.add_argument('-s', '--stego', type=str, help='Путь к файлу - стеганограмме результату погруженния вложения в покрывающий объект.')
+    parser_embedding.set_defaults(func=embedding)
 
 
     parser_extracting = subparsers.add_parser('extracting', help='Извлечение информации.', formatter_class=argparse.RawTextHelpFormatter)

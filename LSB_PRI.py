@@ -8,7 +8,7 @@ from utils import D2B, B2D, chars2bytes, bytes2chars, to_bit_vector, from_bit_ve
 
 
 # метки начала и конца места погружения вложения в покрывающий объект
-default_start_label: int = 42
+default_start_position: int = 42
 default_end_label: str = 'k0HEU'
 default_key: int = 3
 
@@ -36,6 +36,7 @@ def step(byte: ndarray[uint8], scale: int) -> int:
     count_bits = 0
     for i in range(len(byte)):
         count_bits += byte[i]
+    count_bits = 1 if count_bits == 0 else count_bits
     return int(count_bits * scale)
 
 
@@ -43,7 +44,7 @@ def LSB_PRI_embedding(
         cover_file_path: str,
         stego_file_path: str,
         message_file_path: str,
-        start_label: int = default_start_label,
+        start_position: int = default_start_position,
         end_label: str = default_end_label,
         key: int = default_key,
         fill_rest: bool = True
@@ -60,7 +61,7 @@ def LSB_PRI_embedding(
             путь к стеганограмме
         message_file_path: str
             путь к файлу вложения
-        start_label: str = 42
+        start_position: str = 42
             место начала погружения
         end_label: str = 'k0HEU'
             метка конца места погружения
@@ -108,23 +109,22 @@ def LSB_PRI_embedding(
     # стеганограмма - копия покрывающего объекта с измененными НЗБ
     stego_vect = copy(cover_vect)
 
-    # TODO: сделать заполнение случайными битам и с начала контейнера тоже
+    # заполняем покрывающий объект случайными битами, чтобы скрыть место размещения вложоения
+    if fill_rest:
+        z = 1
+        while z <= cover_len:
+            b = D2B(cover_vect[z])
+            b[0] = round(random())
+            stego_vect[z] = B2D(b)
+            z += step(D2B(z), key)
 
-    z = start_label
+    z = start_position
     for i in range(message_len):
         b = D2B(cover_vect[z])
         b[0] = message_bits[i]
         stego_vect[z] = B2D(b)
         # определяем следующее место встраивания
         z += step(D2B(z), key)
-
-    # заполняем оставшуюся пустую часть покрывающего объекта случайными битами
-    if fill_rest:
-        while z <= cover_len:
-            b = D2B(cover_vect[z])
-            b[0] = round(random())
-            stego_vect[z] = B2D(b)
-            z += step(D2B(z), key)
 
     # собираем изображение обратно
     stego_red, stego_green, stego_blue = array_split(stego_vect, 3)
@@ -140,7 +140,7 @@ def LSB_PRI_embedding(
 def LSB_PRI_extracting(
         stego_file_path: str,
         extract_file_path: str,
-        start_label: int = default_start_label,
+        start_position: int = default_start_position,
         end_label: str = default_end_label,
         key: int = default_key
     ):
@@ -154,7 +154,7 @@ def LSB_PRI_extracting(
             имя/путь к стеганограмме
         extract_file_path: str
             путь к файлу вложения (только директория)
-        start_label: str = 42
+        start_position: str = 42
             метка начала места погружения
         end_label: str = 'k0HEU'
             метка конца места погружения
@@ -179,7 +179,7 @@ def LSB_PRI_extracting(
     # резервируем место под вложение
     message_bits = empty(stego_len, dtype=uint8)
     
-    z = start_label
+    z = start_position
     i = 0
     while z <= stego_len:
         # байт стеганограммы в двоичный вид
