@@ -170,6 +170,8 @@ def LSB_extracting(
     message_file_name_len = chars2bytes(message[0])[0]
     message_file_name = message[1:message_file_name_len + 1]
 
+    if not extract_file_path:
+        extract_file_path = '.'
     message_file_path = os.path.join(extract_file_path, message_file_name)
     with open(message_file_path, 'bw') as F:
         F.write(chars2bytes(message[message_file_name_len + 1:]))
