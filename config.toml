@@ -12,8 +12,8 @@
 # log_files_count = 10
 
 [files]
-extracts_folder = 'assets/extracts'
-covers_folder = 'assets/covers'
-stegos_folder = 'assets/stegos'
-messages_folder = 'assets/messages'
-analysis_folder = 'assets/analysis'
+#extracts_folder = 'assets/extracts'
+#covers_folder = 'assets/covers'
+#stegos_folder = 'assets/stegos'
+#messages_folder = 'assets/messages'
+#analysis_folder = 'assets/analysis'
