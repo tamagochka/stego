@@ -2,16 +2,17 @@ import logging
 import argparse
 from argparse import Namespace
 
-# from numpy import set_printoptions, inf
+from numpy import set_printoptions, inf
 
 from config import AppConfig
 from LSB import LSB_embedding, LSB_extracting
 from LSB_PRI import LSB_PRI_embedding, LSB_PRI_extracting
+from LSB_PRP import LSB_PRP_embedding
 from steganalysing import visual_attack
 
 
-# set_printoptions(threshold=inf)
-# set_printoptions(linewidth=inf)
+set_printoptions(threshold=inf)
+set_printoptions(linewidth=inf)
 
 
 def embedding(args: Namespace, app_config: AppConfig):
@@ -34,6 +35,13 @@ def embedding(args: Namespace, app_config: AppConfig):
             )
         case 'pri':
             LSB_PRI_embedding(
+                cover_file_path,
+                stego_file_path,
+                message_file_path,
+                **params if params else {}
+            )
+        case 'prp':
+            LSB_PRP_embedding(
                 cover_file_path,
                 stego_file_path,
                 message_file_path,
