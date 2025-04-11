@@ -26,11 +26,11 @@ def LSB_embedding(
     Parameters
     ----------
         cover_file_path: str
-            путь к покрывающему объекту
+            имя/путь к покрывающему объекту
         stego_file_path: str
-            путь к стеганограмме
+            имя/путь к стеганограмме
         message_file_path: str
-            путь к файлу вложения
+            имя/путь к файлу вложения
         start_label: str = 'H@4@l0'
             метка начала места погружения
         end_label: str = 'k0HEU'
