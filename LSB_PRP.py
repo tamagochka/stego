@@ -1,8 +1,7 @@
 import os
-from random import random
+from math import floor
 
 from PIL import Image
-from math import floor
 from numpy import concatenate, asarray, fromfile, uint8, empty, uint16, ndarray, copy, hstack, dstack, roll, array_equal, zeros
 
 from utils import chars2bytes, bytes2chars, to_bit_vector, from_bit_vector, D2B, B2D
@@ -119,6 +118,7 @@ def LSB_PRP_embedding(
         b[0] = message_bits[i]
         stego_arr[x, y] = B2D(b)
 
+    # собираем обратно изображение из цветовых составляющих
     stego_red = stego_arr[:, :cover_blue.shape[1]]
     stego_green = stego_arr[:, cover_blue.shape[1]: cover_blue.shape[1] + cover_green.shape[1]]
     stego_blue = stego_arr[:, cover_blue.shape[1] + cover_green.shape[1]: cover_blue.shape[1] + cover_green.shape[1] + cover_red.shape[1]]

@@ -8,6 +8,7 @@ from config import AppConfig
 from LSB import LSB_embedding, LSB_extracting
 from LSB_PRI import LSB_PRI_embedding, LSB_PRI_extracting
 from LSB_PRP import LSB_PRP_embedding, LSB_PRP_extracting
+from LSB_block import LSB_block_embedding
 from steganalysing import visual_attack
 
 
@@ -42,6 +43,13 @@ def embedding(args: Namespace, app_config: AppConfig):
             )
         case 'prp':
             LSB_PRP_embedding(
+                cover_file_path,
+                stego_file_path,
+                message_file_path,
+                **params if params else {}
+            )
+        case 'block':
+            LSB_block_embedding(
                 cover_file_path,
                 stego_file_path,
                 message_file_path,
