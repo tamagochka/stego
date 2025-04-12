@@ -161,7 +161,7 @@ def LSB_PRP_extracting(
     stego_red = stego_object[:, :, 0]
     stego_green = stego_object[:, :, 1]
     stego_blue = stego_object[:, :, 2]
-    # собираем все цветовые составляющие в одну вектор-строку байт
+    # соединяем двумерные цветовые плоскости в один двумерный массив
     stego_arr = hstack((stego_red, stego_green, stego_blue))
     
     # размеры массива

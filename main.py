@@ -8,7 +8,7 @@ from config import AppConfig
 from LSB import LSB_embedding, LSB_extracting
 from LSB_PRI import LSB_PRI_embedding, LSB_PRI_extracting
 from LSB_PRP import LSB_PRP_embedding, LSB_PRP_extracting
-from LSB_block import LSB_block_embedding
+from LSB_block import LSB_block_embedding, LSB_block_extracting
 from steganalysing import visual_attack
 
 
@@ -80,6 +80,12 @@ def extracting(args: Namespace, app_config: AppConfig):
             )
         case 'prp':
             LSB_PRP_extracting(
+                stego_file_path,
+                extract_file_path,
+                **params if params else {}
+            )
+        case 'block':
+            LSB_block_extracting(
                 stego_file_path,
                 extract_file_path,
                 **params if params else {}

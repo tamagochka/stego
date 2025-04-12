@@ -3,15 +3,19 @@ from math import floor, ceil
 from random import randrange
 
 from PIL import Image
-from numpy import asarray, uint8, fromfile, concatenate, hstack, copy, dstack
+from numpy import asarray, uint8, fromfile, concatenate, hstack, copy, dstack, zeros
 
 from utils import chars2bytes, bytes2chars, to_bit_vector, from_bit_vector, D2B, B2D
+
+# метка конца места погружения вложения в покрывающий объект по умолчанию
+default_end_label: str = 'k0HEU'
 
 
 def LSB_block_embedding(
         cover_file_path: str,
         stego_file_path: str,
-        message_file_path: str
+        message_file_path: str,
+        end_label: str = default_end_label
     ):
     """
     Блочное погружение в НЗБ для большей стойкости к изменениям покрывающего объекта
@@ -19,11 +23,13 @@ def LSB_block_embedding(
     Parameters
     ----------
         cover_file_path: str
-            путь к покрывающему объекту
+            имя/путь к покрывающему объекту
         stego_file_path: str
-            путь к стеганограмме
+            имя/путь к стеганограмме
         message_file_path: str
-            путь к файлу вложения
+            имя/путь к файлу вложения
+        end_label: str = 'k0HEU'
+            метка конца места погружения
     """
 
     # загрузка покрывающего объекта
@@ -37,6 +43,8 @@ def LSB_block_embedding(
         message_object = fromfile(F, dtype=uint8)
         message_file_name = os.path.basename(F.name)
 
+    # преобразуем метку конца места погружения в байтовую вектор-строку
+    end_label_bytes = chars2bytes(end_label)
     # преобразуем имя файла вложения и длинну его имени в байтовые вектор-строки
     message_file_name_bytes = chars2bytes(message_file_name)
     message_file_name_bytes_len = asarray([len(message_file_name_bytes)])
@@ -44,7 +52,8 @@ def LSB_block_embedding(
     message_bytes = concatenate((
         message_file_name_bytes_len,
         message_file_name_bytes,
-        message_object))
+        message_object,
+        end_label_bytes))
     # преобразуем вктор-строку байт в вектор-строку бит
     message_bits = to_bit_vector(message_bytes)
     message_len = len(message_bits)
@@ -105,9 +114,60 @@ def LSB_block_embedding(
 
 def LSB_block_extracting(
         stego_file_path: str,
-        extract_file_path: str
+        extract_file_path: str,
+        end_label: str = default_end_label
     ):
     """
-    
+    Блочное извлечение из НЗБ
+
+    Parameters
+    ----------
+        stego_file_path: str
+            имя/путь к стеганограмме
+        extract_file_path: str
+            путь к файлу вложения (только директория)
+        end_label: str = 'k0HEU'
+            метка конца места погружения
     """
-    pass
+    
+    # загрузка стеганограммы
+    stego_object = None
+    with Image.open(stego_file_path, 'r') as F:
+        stego_object = asarray(F, dtype=uint8)
+
+    # получаем цветовые составляющие изображения
+    stego_red = stego_object[:, :, 0]
+    stego_green = stego_object[:, :, 1]
+    stego_blue = stego_object[:, :, 2]
+    # соединяем двумерные цветовые плоскости в один двумерный массив
+    stego_arr = hstack((stego_red, stego_green, stego_blue))
+
+    # размеры массива
+    X, Y = stego_arr.shape
+    # определяем количество бит в строке
+    bit_per_line = stego_arr[stego_arr.shape[0] - 1, stego_arr.shape[1] - 1]
+    # длинна вложения
+    message_len = Y * int(bit_per_line)
+    # резервируем место под битовую вектор-строку вложения
+    message_bits = zeros(message_len, dtype=uint8)
+
+    for i in range(bit_per_line):
+        # начало и конец блока
+        block_start = i * floor(X / bit_per_line)
+        block_end = (i + 1) * floor(X / bit_per_line)
+        for y in range(Y):
+            block = stego_arr[block_start:block_end, y]
+            even = 0
+            for x in range(len(block)):
+                even = even ^ D2B(block[x])[0]
+            message_bits[y + i * Y] = even
+    
+    message_bytes = from_bit_vector(message_bits)
+    message = bytes2chars(message_bytes)
+    message = message[0:message.find(end_label)]
+    message_file_name_len = chars2bytes(message[0])[0]
+    message_file_name = message[1:message_file_name_len + 1]
+    message_file_path = os.path.join(extract_file_path, message_file_name)
+    with open(message_file_path, 'bw') as F:
+        F.write(chars2bytes(message[message_file_name_len + 1:]))
+
