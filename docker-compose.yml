@@ -1,0 +1,19 @@
+name: stego
+services:
+  stego:
+    build:
+      context: .
+      target: stego
+    image: stego
+    container_name: stego
+    working_dir: /opt/stego
+    volumes:
+      - ./run.py:/opt/stego/run.py
+      - ./app:/opt/stego/app
+      - ${ASSETS-./assets}:/opt/stego/assets
+      - ${CONF-./config.toml}:/opt/stego/config.toml
+    command: >
+      bash -c '
+        python run.py -cfg config.toml ${ARGS}
+      '
+    

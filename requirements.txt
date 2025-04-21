@@ -1,6 +1,6 @@
-numpy
-matplotlib
-pillow
-logging
-toml
+numpy==2.2.4
+matplotlib==3.10.1
+pillow==11.1.0
+logging==0.4.9.6
+toml==0.10.2
 
