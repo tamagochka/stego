@@ -1,10 +1,10 @@
-import os
+import os, sys
 from math import floor
 
 from PIL import Image
 from numpy import concatenate, asarray, fromfile, uint8, empty, uint16, ndarray, copy, hstack, dstack, roll, array_equal, zeros
 
-from utils import chars2bytes, bytes2chars, to_bit_vector, from_bit_vector, D2B, B2D
+from .utils import chars2bytes, bytes2chars, to_bit_vector, from_bit_vector, D2B, B2D
 
 # метка конца места погружения вложения в покрывающий объект ключ по умолчанию и количество пар ключей
 default_primary_key: int = 125
@@ -205,3 +205,7 @@ def LSB_PRP_extracting(
     message_file_path = os.path.join(extract_file_path, message_file_name)
     with open(message_file_path, 'bw') as F:
         F.write(chars2bytes(message[message_file_name_len + 1:]))
+
+
+if __name__ == '__main__':
+    sys.exit()

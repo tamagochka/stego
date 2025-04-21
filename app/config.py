@@ -1,6 +1,4 @@
-import os
-import sys
-import logging
+import os, sys, logging
 from logging import handlers
 from dataclasses import dataclass
 
@@ -178,3 +176,7 @@ class AppConfig(object):
     def get_analysis_file_path(self, file_name: str = None) -> str:
         return get_file_path(self.analysis_folder, file_name)
 
+
+if __name__ == '__main__':
+    sys.exit()
+    

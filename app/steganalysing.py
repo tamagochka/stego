@@ -1,10 +1,8 @@
-import os
+import os, sys
 
 from numpy import asarray, uint8
 from PIL import Image
 import matplotlib.pyplot as plt
-
-from config import AppConfig
 
 
 def visual_attack(stego_file_path: str, result_file_path: str):
@@ -34,3 +32,6 @@ def visual_attack(stego_file_path: str, result_file_path: str):
     else:
         plt.show()
 
+
+if __name__ == '__main__':
+    sys.exit()

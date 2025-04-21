@@ -1,74 +1,41 @@
-import os
+import os, sys
 from random import random
 
 from PIL import Image
-from numpy import copy, empty, uint8, asarray, concatenate, ndarray, fromfile, array_split, dstack
+from numpy import uint8, copy, empty, asarray, fromfile, concatenate, array_split, dstack
 
-from utils import D2B, B2D, chars2bytes, bytes2chars, to_bit_vector, from_bit_vector
+from .utils import D2B, B2D, chars2bytes, bytes2chars, to_bit_vector, from_bit_vector
 
 
 # метки начала и конца места погружения вложения в покрывающий объект
-default_start_position: int = 42
-default_end_label: str = 'k0HEU'
-default_key: int = 3
+default_start_label: str = 'H@4@l0'
+defualt_end_label: str = 'k0HEU'
 
 
-def step(byte: ndarray[uint8], scale: int) -> int:
-    """
-    Генерация псевдослучайного интервала на основе количества единиц
-    в двоичном представлении номера последнего модифицированного байта изображения
-    умноженного на коэффициент масштабирования
-    
-    Parameters
-    ----------
-        byte: ndarray[uint8]
-            двоичная запись числа
-        scale: int
-            коэффициент масштабирования
-
-    Returns
-    -------
-        int
-            интервал между погруженными битами
-
-    """
-
-    count_bits = 0
-    for i in range(len(byte)):
-        count_bits += byte[i]
-    count_bits = 1 if count_bits == 0 else count_bits
-    return int(count_bits * scale)
-
-
-def LSB_PRI_embedding(
+def LSB_embedding(
         cover_file_path: str,
         stego_file_path: str,
         message_file_path: str,
-        start_position: int = default_start_position,
-        end_label: str = default_end_label,
-        key: int = default_key,
+        start_label: str = default_start_label,
+        end_label: str = defualt_end_label,
         fill_rest: bool = True
     ):
     """
-    Погружение в НЗБ с псевдослучайным интервалом. Расстояние между изменяемыми
-    пикселями будет задаваться псевдослучайными значениями.
+    Погружение в НЗБ с непрерывным замещением.
 
     Parameters
     ----------
         cover_file_path: str
-            путь к покрывающему объекту
+            имя/путь к покрывающему объекту
         stego_file_path: str
-            путь к стеганограмме
+            имя/путь к стеганограмме
         message_file_path: str
-            путь к файлу вложения
-        start_position: str = 42
-            место начала погружения
+            имя/путь к файлу вложения
+        start_label: str = 'H@4@l0'
+            метка начала места погружения
         end_label: str = 'k0HEU'
             метка конца места погружения
-        key: int
-            ключ, задающий масштабирование шага встраивания
-            (расстояние между битами вложения)
-        fill_rest: bool
+        fill_rest: bool = True
             заполнять незаполненную часть покрывающего объекта случайными битами
     """
 
@@ -83,13 +50,15 @@ def LSB_PRI_embedding(
         message_object = fromfile(F, dtype=uint8)
         message_file_name = os.path.basename(F.name)
 
-    # преобразуем метку конца места погружения,
+    # преобразуем метки начала и конца места погружения,
     # а также имя файла вложения и длинну его имени в байтовые вектор-строки
+    start_label_bytes = chars2bytes(start_label)
     end_label_bytes = chars2bytes(end_label)
     message_file_name_bytes = chars2bytes(message_file_name)
     message_file_name_bytes_len = asarray([len(message_file_name_bytes)])
     # собираем все в одину вектор-строку байт
     message_bytes = concatenate((
+        start_label_bytes,
         message_file_name_bytes_len,
         message_file_name_bytes,
         message_object,
@@ -109,22 +78,21 @@ def LSB_PRI_embedding(
     # стеганограмма - копия покрывающего объекта с измененными НЗБ
     stego_vect = copy(cover_vect)
 
-    # заполняем покрывающий объект случайными битами, чтобы скрыть место размещения вложоения
-    if fill_rest:
-        z = 1
-        while z <= cover_len:
-            b = D2B(cover_vect[z])
-            b[0] = round(random())
-            stego_vect[z] = B2D(b)
-            z += step(D2B(z), key)
-
-    z = start_position
+    # погружение
     for i in range(message_len):
-        b = D2B(cover_vect[z])
+        # преобразуем байт покрывающего объекта в двоичный вид
+        b = D2B(cover_vect[i])
+        # замещаем НЗБ покрывающего объекта битом вложения
         b[0] = message_bits[i]
-        stego_vect[z] = B2D(b)
-        # определяем следующее место встраивания
-        z += step(D2B(z), key)
+        # сохраняем стеганограмму
+        stego_vect[i] = B2D(b)
+
+    # заполняем оставшуюся пустую часть покрывающего объекта случайными битами
+    if fill_rest:
+        for i in range(message_len, cover_len):
+            b = D2B(cover_vect[i])
+            b[0] = round(random())
+            stego_vect[i] = B2D(b)
 
     # собираем изображение обратно
     stego_red, stego_green, stego_blue = array_split(stego_vect, 3)
@@ -133,20 +101,32 @@ def LSB_PRI_embedding(
     stego_blue = array_split(stego_blue, count_lines)
     stego_object = dstack((stego_red, stego_green, stego_blue))
 
+    # сравнение попиксельно покрывающего объекта и стеганограммы
+    # for i in range(len(cover_object)):
+    #     for j in range(len(cover_object[i])):
+    #         c = ''
+    #         for k in range(len(cover_object[i][j])):
+    #             c = c + f'{cover_object[i][j][k]:4}'
+    #         c = '[' + c + ']'
+    #         s = ''
+    #         for k in range(len(stego[i][j])):
+    #             s = s + f'{stego[i][j][k]:4}'
+    #         s = '[' + s + ']'
+    #         print(c, ' - ', s, '+' if c != s else ' ')
+    #     print()
+
     with Image.fromarray(stego_object) as F:
         F.save(stego_file_path)
 
 
-def LSB_PRI_extracting(
+def LSB_extracting(
         stego_file_path: str,
         extract_file_path: str,
-        start_position: int = default_start_position,
-        end_label: str = default_end_label,
-        key: int = default_key
+        start_label: str = default_start_label,
+        end_label: str = defualt_end_label
     ):
     """
-    Извлечение из НЗБ с псевдослучайным интервалом.
-    Расстояние между пикселями задается псевдослучайными значениями.
+    Извлечение из НЗБ с непрерывным замещением.
 
     Parameters
     ----------
@@ -154,15 +134,12 @@ def LSB_PRI_extracting(
             имя/путь к стеганограмме
         extract_file_path: str
             путь к файлу вложения (только директория)
-        start_position: str = 42
+        start_label: str = 'H@4@l0'
             метка начала места погружения
         end_label: str = 'k0HEU'
             метка конца места погружения
-        key: int
-            ключ, задающий масштабирование шага встраивания
-            (расстояние между битами вложения)
     """
-
+    
     # загрузка стеганограммы
     stego_object = None
     with Image.open(stego_file_path, 'r') as F:
@@ -178,26 +155,27 @@ def LSB_PRI_extracting(
     stego_len = len(stego_vect)
     # резервируем место под вложение
     message_bits = empty(stego_len, dtype=uint8)
-    
-    z = start_position
-    i = 0
-    while z <= stego_len:
+
+    for i in range(stego_len):
         # байт стеганограммы в двоичный вид
-        b = D2B(stego_vect[z])
+        b = D2B(stego_vect[i])
         # сохраняем НЗБ стеганограммы как бит вложения
         message_bits[i] = b[0]
-        i += 1
-        z += step(D2B(z), key)
 
     # выделяем вложение
     message_bytes = from_bit_vector(message_bits)
     message = bytes2chars(message_bytes)
-    message = message[0:message.find(end_label)]
+    message = message[message.find(start_label) + len(start_label):message.find(end_label)]
 
     message_file_name_len = chars2bytes(message[0])[0]
     message_file_name = message[1:message_file_name_len + 1]
 
+    if not extract_file_path:
+        extract_file_path = '.'
     message_file_path = os.path.join(extract_file_path, message_file_name)
     with open(message_file_path, 'bw') as F:
         F.write(chars2bytes(message[message_file_name_len + 1:]))
 
+
+if __name__ == '__main__':
+    sys.exit()

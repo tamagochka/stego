@@ -1,11 +1,11 @@
-import os
+import os, sys
 from math import floor, ceil
 from random import randrange
 
 from PIL import Image
 from numpy import asarray, uint8, fromfile, concatenate, hstack, copy, dstack, zeros
 
-from utils import chars2bytes, bytes2chars, to_bit_vector, from_bit_vector, D2B, B2D
+from .utils import chars2bytes, bytes2chars, to_bit_vector, from_bit_vector, D2B, B2D
 
 # метка конца места погружения вложения в покрывающий объект по умолчанию
 default_end_label: str = 'k0HEU'
@@ -171,3 +171,7 @@ def LSB_block_extracting(
     with open(message_file_path, 'bw') as F:
         F.write(chars2bytes(message[message_file_name_len + 1:]))
 
+
+if __name__ == '__main__':
+    sys.exit()
+    

@@ -1,3 +1,5 @@
+import sys
+
 from numpy import empty, array, uint8, uint16, ndarray
 
 
@@ -158,3 +160,7 @@ def keypairgen(Ko, K):
         if Ks[i] > 255:
             Ks[i] = int(str(Ks[i])[0:2])
     return Ks.astype(uint8)
+
+
+if __name__ == '__main__':
+    sys.exit()
