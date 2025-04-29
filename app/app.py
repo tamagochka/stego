@@ -8,6 +8,7 @@ from .LSB import LSB_embedding, LSB_extracting
 from .LSB_PRI import LSB_PRI_embedding, LSB_PRI_extracting
 from .LSB_PRP import LSB_PRP_embedding, LSB_PRP_extracting
 from .LSB_block import LSB_block_embedding, LSB_block_extracting
+from .LSB_quant import LSB_quant_embedding, LSB_quant_extracting
 from .steganalysing import visual_attack
 
 
@@ -65,6 +66,13 @@ class App(object):
                     message_file_path,
                     **params if params else {}
                 )
+            case 'quant':
+                LSB_quant_embedding(
+                    cover_file_path,
+                    stego_file_path,
+                    message_file_path,
+                    **params if params else {}
+                )
 
 
     def extracting(self):
@@ -100,6 +108,12 @@ class App(object):
                 )
             case 'block':
                 LSB_block_extracting(
+                    stego_file_path,
+                    extract_file_path,
+                    **params if params else {}
+                )
+            case 'quant':
+                LSB_quant_extracting(
                     stego_file_path,
                     extract_file_path,
                     **params if params else {}
@@ -158,6 +172,7 @@ class App(object):
                                                     '\t\t\tprimary_key: int - первичный ключ, используемый для генерации перестановок;\n' \
                                                     '\t\t\tcount_key_pairs: int - количество генерируемых пар ключей перестановок;\n' \
                                                     '\t\t\tend_label: str - метка конца места погружения.\n')
+        # TODO: добавить справку для погружения с использованием метода квантования изображения
         self.available_args_for_embedding.append('algorithm')
         parser_embedding.add_argument('-p', '--params', type=str, help='Параметры алгоритма, используемого для погружения.')
         self.available_args_for_embedding.append('params')
@@ -193,6 +208,7 @@ class App(object):
                                                     '\t\t\tprimary_key: int - первичный ключ, используемый для генерации перестановок;\n' \
                                                     '\t\t\tcount_key_pairs: int - количество генерируемых пар ключей перестановок;\n' \
                                                     '\t\t\tend_label:str - метка конца места погружения.')
+        # TODO: добавить справку для извлечения с использованием метода квантования изображения
         self.available_args_for_extracting.append('algorithm')
         parser_extracting.add_argument('-p', '--params', type=str, help='Параметры алгоритма, используемого для извлечения.')
         self.available_args_for_extracting.append('params')

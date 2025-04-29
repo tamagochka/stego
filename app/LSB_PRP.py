@@ -90,7 +90,7 @@ def LSB_PRP_embedding(
     message_bits = to_bit_vector(message_bytes)
     message_len = len(message_bits)
 
-    # # получаем цветовые составляющие изображения
+    # получаем цветовые составляющие изображения
     cover_red = cover_object[:, :, 0]
     cover_green = cover_object[:, :, 1]
     cover_blue = cover_object[:, :, 2]
