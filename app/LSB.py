@@ -2,7 +2,7 @@ import os, sys
 from random import random
 
 from PIL import Image
-from numpy import uint8, copy, empty, asarray, fromfile, concatenate, array_split, dstack
+from numpy import uint8, copy, zeros, asarray, fromfile, concatenate, array_split, dstack
 
 from .utils import D2B, B2D, chars2bytes, bytes2chars, to_bit_vector, from_bit_vector
 
@@ -154,7 +154,7 @@ def LSB_extracting(
 
     stego_len = len(stego_vect)
     # резервируем место под вложение
-    message_bits = empty(stego_len, dtype=uint8)
+    message_bits = zeros(stego_len, dtype=uint8)
 
     for i in range(stego_len):
         # байт стеганограммы в двоичный вид

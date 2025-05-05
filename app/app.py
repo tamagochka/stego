@@ -9,6 +9,7 @@ from .LSB_PRI import LSB_PRI_embedding, LSB_PRI_extracting
 from .LSB_PRP import LSB_PRP_embedding, LSB_PRP_extracting
 from .LSB_block import LSB_block_embedding, LSB_block_extracting
 from .LSB_quant import LSB_quant_embedding, LSB_quant_extracting
+from .LSB_kdb import LSB_kdb_embedding, LSB_kdb_extracting
 from .steganalysing import visual_attack
 
 
@@ -73,6 +74,13 @@ class App(object):
                     message_file_path,
                     **params if params else {}
                 )
+            case 'kdb':
+                LSB_kdb_embedding(
+                    cover_file_path,
+                    stego_file_path,
+                    message_file_path,
+                    **params if params else {}
+                )
 
 
     def extracting(self):
@@ -114,6 +122,12 @@ class App(object):
                 )
             case 'quant':
                 LSB_quant_extracting(
+                    stego_file_path,
+                    extract_file_path,
+                    **params if params else {}
+                )
+            case 'kdb':
+                LSB_kdb_extracting(
                     stego_file_path,
                     extract_file_path,
                     **params if params else {}

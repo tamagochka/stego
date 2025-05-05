@@ -2,7 +2,7 @@ import os, sys
 from math import floor
 
 from PIL import Image
-from numpy import concatenate, asarray, fromfile, uint8, empty, uint16, ndarray, copy, hstack, dstack, roll, array_equal, zeros
+from numpy import concatenate, asarray, fromfile, uint8, uint16, ndarray, copy, hstack, dstack, roll, array_equal, zeros
 
 from .utils import chars2bytes, bytes2chars, to_bit_vector, from_bit_vector, D2B, B2D
 
@@ -29,7 +29,7 @@ def key_pairs_gen(primary_key: int, count_key_pairs: int) -> ndarray[uint8]:
 
     """
 
-    key_pairs = empty(2 * count_key_pairs, dtype=uint16)
+    key_pairs = zeros(2 * count_key_pairs, dtype=uint16)
     key_pairs[0] = primary_key
     for i in range(1, 2 * count_key_pairs):
         key_pairs[i] = int(str(key_pairs[i - 1] ** 2)[:3])
@@ -171,7 +171,7 @@ def LSB_PRP_extracting(
 
     # резервируем место под битовую вектор-строку вложения
     message_len = X * Y
-    message_bits = empty(message_len, dtype=uint8)
+    message_bits = zeros(message_len, dtype=uint8)
 
     # переводим метку конца места погружения в биты
     end_label_bytes = chars2bytes(end_label)
