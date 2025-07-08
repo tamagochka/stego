@@ -3,7 +3,7 @@ import sys
 from numpy import zeros, array, uint8, uint16, ndarray
 
 
-class MersenneTwister:
+class MersenneTwister(object):
     """
     Генератор псевдослучайных чисел на основе алгоритма "Вихрь Мерсена"
     """

@@ -10,34 +10,51 @@ from .LSB_PRP import LSB_PRP_embedding, LSB_PRP_extracting
 from .LSB_block import LSB_block_embedding, LSB_block_extracting
 from .LSB_quant import LSB_quant_embedding, LSB_quant_extracting
 from .LSB_kdb import LSB_kdb_embedding, LSB_kdb_extracting
+from .LSB_hugo import LSB_hugo_embedding
 from .steganalysing import visual_attack
 
 
 @dataclass
 class App(object):
 
-    config: AppConfig = None
-    args: Namespace = None
-    parser: argparse.ArgumentParser = None
-    subparsers: dict[str, argparse.ArgumentParser] = None
-    available_args_for_embedding: list[str] = None
-    available_args_for_extracting: list[str] = None
-    available_args_for_analysing: list[str] = None
+    config: AppConfig | None = None
+    args: Namespace | None = None
+    parser: argparse.ArgumentParser | None = None
+    subparsers: dict[str, argparse.ArgumentParser] | None = None
+    available_args_for_embedding: list[str] | None = None
+    available_args_for_extracting: list[str] | None = None
+    available_args_for_analysing: list[str] | None = None
 
     def embedding(self):
         # если никакие параметры не переданы, то выводим справку и выходим
-        if all(((key in self.available_args_for_embedding) == (val is None)) for key, val in vars(self.args).items()):
-            self.subparsers['embedding'].print_help()
-            return
+        if self.available_args_for_embedding:
+            if all(((key in self.available_args_for_embedding) == (val is None)) for key, val in vars(self.args).items()):
+                if self.subparsers:
+                    self.subparsers['embedding'].print_help()
+                return
+        if not self.config:
+            logging.error('Конфигурация не была инициализирована.')
+            sys.exit()
+        if not self.args:
+            logging.error('Аргументы не были разобраны.')
+            sys.exit()
         cover_file_path = self.config.get_covers_file_path(self.args.cover) if self.args.cover else None
         stego_file_path = self.config.get_stegos_file_path(self.args.stego) if self.args.stego else None
         message_file_path = self.config.get_messages_file_path(self.args.message) if self.args.message else None
+        if not cover_file_path:
+            logging.error(f'Ошибка пути к покрывающим объектам: \'{cover_file_path}\'')
+            sys.exit()
+        if not stego_file_path:
+            logging.error(f'Ошибка пути к стеганограммам: \'{stego_file_path}\'')
+            sys.exit()
+        if not message_file_path:
+            logging.error(f'Ошибка пути к вложениям: \'{message_file_path}\'')
+            sys.exit()
         algorithm = self.args.algorithm
         # преобразуем строку параметров в словарь
         params = None
         if self.args.params:
             params = eval(f'dict({self.args.params})')
-
         match algorithm:
             case 'lsb':
                 LSB_embedding(
@@ -81,20 +98,37 @@ class App(object):
                     message_file_path,
                     **params if params else {}
                 )
+            case 'hugo':
+                LSB_hugo_embedding(
+                    cover_file_path,
+                    stego_file_path,
+                    message_file_path,
+                    **params if params else {}
+                )
 
 
     def extracting(self):
         # если никакие параметры не переданы, то выводим справку и выходим
-        if all(((key in self.available_args_for_extracting) == (val is None)) for key, val in vars(self.args).items()):
-            self.subparsers['extracting'].print_help()
-            return
-        stego_file_path = self.config.get_stegos_file_path(self.args.stego)
+        if self.available_args_for_extracting:
+            if all(((key in self.available_args_for_extracting) == (val is None)) for key, val in vars(self.args).items()):
+                if self.subparsers:
+                    self.subparsers['extracting'].print_help()
+                return
+        if not self.config:
+            logging.error('Конфигурация не была инициализирована.')
+            sys.exit()
+        if not self.args:
+            logging.error('Аргументы не были разобраны.')
+            sys.exit()
+        stego_file_path = self.config.get_stegos_file_path(self.args.stego) if self.args.stego else None
         extract_file_path = self.config.get_extracts_file_path()
         algorithm = self.args.algorithm
         params = None
         if self.args.params:
             params = eval(f'dict({self.args.params})')
-
+        if not stego_file_path:
+            logging.error(f'Ошибка пути к стеганограммам: \'{stego_file_path}\'')
+            sys.exit()
         match algorithm:
             case 'lsb':
                 LSB_extracting(
@@ -136,16 +170,29 @@ class App(object):
 
     def analysing(self):
         # если никакие параметры не переданы, то выводим справку и выходим
-        if all(((key in self.available_args_for_analysing) == (val is None)) for key, val in vars(self.args).items()):
-            self.subparsers['analysing'].print_help()
-            return
-        stego_file_path = self.config.get_stegos_file_path(self.args.stego)
+        if self.available_args_for_analysing:
+            if all(((key in self.available_args_for_analysing) == (val is None)) for key, val in vars(self.args).items()):
+                if self.subparsers:
+                    self.subparsers['analysing'].print_help()
+                return
+        if not self.config:
+            logging.error('Конфигурация не была инициализирована.')
+            sys.exit()
+        if not self.args:
+            logging.error('Аргументы не были разобраны.')
+            sys.exit()
+        stego_file_path = self.config.get_stegos_file_path(self.args.stego) if self.args.stego else None
         result_file_path = self.config.get_analysis_file_path(self.args.result) if self.args.result else None
         algorithm = self.args.algorithm
         params = None
         if self.args.params:
             params = eval(f'dict({self.args.params})')
-
+        if not stego_file_path:
+            logging.error(f'Ошибка пути к стеганограммам: \'{stego_file_path}\'')
+            sys.exit()
+        if not result_file_path:
+            logging.error(f'Ошибка пути к результатам анализа: \'{result_file_path}\'')
+            sys.exit()
         match algorithm:
             case 'visual':
                 visual_attack(
@@ -155,7 +202,7 @@ class App(object):
                 )
 
 
-    def parser_init(self) -> Namespace:
+    def parser_init(self):
 
         self.parser = argparse.ArgumentParser(description='Стеганографическое погружение/извлечение/анализ информации.')
         self.parser.add_argument('-cfg', '--config', type=str, help='Путь к файлу конфигурации в формате toml.', default=None)
@@ -163,6 +210,7 @@ class App(object):
         self.available_args_for_embedding = ['config']
         self.available_args_for_extracting = ['config']
         self.available_args_for_analysing = ['config']
+        self.subparsers = {}
 
 
         parser_embedding = subparsers.add_parser('embedding', help='Погружение информации.', formatter_class=argparse.RawTextHelpFormatter)
@@ -186,7 +234,7 @@ class App(object):
                                                     '\t\t\tprimary_key: int - первичный ключ, используемый для генерации перестановок;\n' \
                                                     '\t\t\tcount_key_pairs: int - количество генерируемых пар ключей перестановок;\n' \
                                                     '\t\t\tend_label: str - метка конца места погружения.\n')
-        # TODO: добавить справку для погружения с использованием метода квантования изображения
+        # TODO дополнить справку для всех методов погружения
         self.available_args_for_embedding.append('algorithm')
         parser_embedding.add_argument('-p', '--params', type=str, help='Параметры алгоритма, используемого для погружения.')
         self.available_args_for_embedding.append('params')
@@ -222,7 +270,7 @@ class App(object):
                                                     '\t\t\tprimary_key: int - первичный ключ, используемый для генерации перестановок;\n' \
                                                     '\t\t\tcount_key_pairs: int - количество генерируемых пар ключей перестановок;\n' \
                                                     '\t\t\tend_label:str - метка конца места погружения.')
-        # TODO: добавить справку для извлечения с использованием метода квантования изображения
+        # TODO добавить справку для всех методов извлечения
         self.available_args_for_extracting.append('algorithm')
         parser_extracting.add_argument('-p', '--params', type=str, help='Параметры алгоритма, используемого для извлечения.')
         self.available_args_for_extracting.append('params')
@@ -251,6 +299,9 @@ class App(object):
         self.subparsers = {}
 
         self.parser_init()
+        if not self.parser:
+            logging.error('Парсер не был инициализирован.')
+            sys.exit()
         self.args = self.parser.parse_args()
 
         self.config = AppConfig(config_file=self.args.config)
@@ -260,9 +311,15 @@ class App(object):
     def run(self):
         
         if not hasattr(self.args, 'func'):
+            if not self.parser:
+                logging.error('Парсер не был инициализирован.')
+                sys.exit()
             self.parser.print_help()
             sys.exit()
 
+        if not self.args:
+            logging.error('Аргументы не были разобраны.')
+            sys.exit()
         self.args.func()
 
 

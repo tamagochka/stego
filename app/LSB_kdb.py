@@ -6,6 +6,7 @@ from numpy import copy, uint8, asarray, concatenate, fromfile, zeros, roll, arra
 
 from .utils import chars2bytes, bytes2chars, to_bit_vector, from_bit_vector, MersenneTwister
 
+
 luminance: float = 0.1  # коээфициент яркости пикселя с погруженными битами
 repeats: int = 5  # число мест погружения каждого бита вложения
 sigma: int = 3  # размер креста из пикселей на основе которых вычисляется прогнозируемое значение яркости пикселя, расположенного в центре креста
