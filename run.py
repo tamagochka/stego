@@ -6,8 +6,8 @@ from app import App
 
 if __name__ == '__main__':
     
-    set_printoptions(threshold=inf)
-    set_printoptions(linewidth=inf)
+    set_printoptions(threshold=int(inf))
+    set_printoptions(linewidth=int(inf))
 
     app = App()
     app.run()
