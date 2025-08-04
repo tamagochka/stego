@@ -55,56 +55,16 @@ class App(object):
         params = None
         if self.args.params:
             params = eval(f'dict({self.args.params})')
-        match algorithm:
-            case 'lsb':
-                LSB_embedding(
-                    cover_file_path,
-                    stego_file_path,
-                    message_file_path,
-                    **params if params else {}  # распаковываем параметры из словаря, если они были переданы
-                )
-            case 'pri':
-                LSB_PRI_embedding(
-                    cover_file_path,
-                    stego_file_path,
-                    message_file_path,
-                    **params if params else {}
-                )
-            case 'prp':
-                LSB_PRP_embedding(
-                    cover_file_path,
-                    stego_file_path,
-                    message_file_path,
-                    **params if params else {}
-                )
-            case 'block':
-                LSB_block_embedding(
-                    cover_file_path,
-                    stego_file_path,
-                    message_file_path,
-                    **params if params else {}
-                )
-            case 'quant':
-                LSB_quant_embedding(
-                    cover_file_path,
-                    stego_file_path,
-                    message_file_path,
-                    **params if params else {}
-                )
-            case 'kdb':
-                LSB_kdb_embedding(
-                    cover_file_path,
-                    stego_file_path,
-                    message_file_path,
-                    **params if params else {}
-                )
-            case 'hugo':
-                LSB_hugo_embedding(
-                    cover_file_path,
-                    stego_file_path,
-                    message_file_path,
-                    **params if params else {}
-                )
+        embedding_algorithms = {
+            'lsb': LSB_embedding,
+            'pri': LSB_PRI_embedding,
+            'prp': LSB_PRP_embedding,
+            'block': LSB_block_embedding,
+            'quant': LSB_quant_embedding,
+            'kdb': LSB_kdb_embedding,
+            'hugo': LSB_hugo_embedding
+        }
+        embedding_algorithms[algorithm](cover_file_path, stego_file_path, message_file_path, **params if params else {})  # распаковываем параметры из словаря, если они были переданы
 
 
     def extracting(self):
@@ -129,43 +89,15 @@ class App(object):
         if not stego_file_path:
             logging.error(f'Ошибка пути к стеганограммам: \'{stego_file_path}\'')
             sys.exit()
-        match algorithm:
-            case 'lsb':
-                LSB_extracting(
-                    stego_file_path,
-                    extract_file_path,
-                    **params if params else {}
-                )
-            case 'pri':
-                LSB_PRI_extracting(
-                    stego_file_path,
-                    extract_file_path,
-                    **params if params else {}
-                )
-            case 'prp':
-                LSB_PRP_extracting(
-                    stego_file_path,
-                    extract_file_path,
-                    **params if params else {}
-                )
-            case 'block':
-                LSB_block_extracting(
-                    stego_file_path,
-                    extract_file_path,
-                    **params if params else {}
-                )
-            case 'quant':
-                LSB_quant_extracting(
-                    stego_file_path,
-                    extract_file_path,
-                    **params if params else {}
-                )
-            case 'kdb':
-                LSB_kdb_extracting(
-                    stego_file_path,
-                    extract_file_path,
-                    **params if params else {}
-                )
+        extracting_algorithms = {
+            'lsb': LSB_extracting,
+            'pri': LSB_PRI_extracting,
+            'prp': LSB_PRP_extracting,
+            'block': LSB_block_extracting,
+            'quant': LSB_quant_extracting,
+            'kdb': LSB_kdb_extracting
+        }
+        extracting_algorithms[algorithm](stego_file_path, extract_file_path, **params if params else {})  # распаковываем параметры из словаря, если они были переданы
 
 
     def analysing(self):
@@ -193,13 +125,10 @@ class App(object):
         if not result_file_path:
             logging.error(f'Ошибка пути к результатам анализа: \'{result_file_path}\'')
             sys.exit()
-        match algorithm:
-            case 'visual':
-                visual_attack(
-                    stego_file_path,
-                    result_file_path,
-                    **params if params else {}
-                )
+        analysing_algorithms = {
+            'visual': visual_attack
+        }
+        analysing_algorithms[algorithm](stego_file_path, result_file_path, **params if params else {})  # распаковываем параметры из словаря, если они были переданы
 
 
     def parser_init(self):
