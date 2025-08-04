@@ -9,7 +9,7 @@ def check_dir(dir_name: str | None):
     """
     Проверяет, существует ли директория с заданным именем, если нет, то создает.
 
-    Attributes
+    Parameters
     ----------
     dir_name: str | None
         имя директории
@@ -24,7 +24,7 @@ def get_file_path(folder_name: str | None, file_name: str | None) -> str:
     """
     Соединяет между собой имя файли и директории, если они были заданы. Иначе возвращает либо имя файла, если не задана директория. Либо имя директории, если не задан файл. Или пустую строку, если не задано ни то ни другое.
 
-    Attributes
+    Parameters
     ----------
     folder_name: str | None
         имя директории
@@ -90,6 +90,16 @@ class AppConfig(object):
     -------
     apply_config()
         применить конфигурацию, если в конфигурации заданы директории для хранения данных, то они будут созданы при применении конфигурации
+    get_extracts_file_path(self, file_name: str | None = None) -> str
+        получить путь к файлу в котором будет сохранено извлеченное вложение
+    get_covers_file_path(self, file_name: str  | None = None) -> str
+        получить путь к покрывающему объекту
+    get_stegos_file_path(self, file_name: str | None = None) -> str
+        получить путь к стеганограмме
+    get_messages_file_path(self, file_name: str | None = None) -> str
+        получить путь к вложению
+    get_analysis_file_path(self, file_name: str | None = None) -> str
+        получить путь по которому будут сохранены результаты стегоанализа
     """
 
     config_file: str | None = None
@@ -191,18 +201,87 @@ class AppConfig(object):
    
 
     def get_extracts_file_path(self, file_name: str | None = None) -> str:
+        """
+        Получить путь к файлу в котором будет сохранено извлеченное вложение.
+
+        Parameters
+        ----------
+        file_name: str | None = None
+            имя файла для которого будет возвращен путь
+        Returns
+        -------
+        str
+            путь к файлу
+        """
+
         return get_file_path(self.extracts_folder, file_name)
     
-    def get_covers_file_path(self, file_name: str  | None= None) -> str:
+    
+    def get_covers_file_path(self, file_name: str  | None = None) -> str:
+        """
+        Получить путь к покрывающему объекту.
+
+        Parameters
+        ----------
+        file_name: str | None = None
+            имя файла для которого будет возвращен путь
+        Returns
+        -------
+        str
+            путь к файлу
+        """
+
         return get_file_path(self.covers_folder, file_name)
 
+
     def get_stegos_file_path(self, file_name: str | None = None) -> str:
+        """
+        Получить путь к стеганограмме.
+
+        Parameters
+        ----------
+        file_name: str | None = None
+            имя файла для которого будет возвращен путь
+        Returns
+        -------
+        str
+            путь к файлу
+        """
+
         return get_file_path(self.stegos_folder, file_name)
 
+
     def get_messages_file_path(self, file_name: str | None = None) -> str:
+        """
+        Получить путь к вложению.
+
+        Parameters
+        ----------
+        file_name: str | None = None
+            имя файла для которого будет возвращен путь
+        Returns
+        -------
+        str
+            путь к файлу
+        """
+
         return get_file_path(self.messages_folder, file_name)
 
+
     def get_analysis_file_path(self, file_name: str | None = None) -> str:
+        """
+        Получить путь по которому будут сохранены результаты стегоанализа.
+
+        Parameters
+        ----------
+        file_name: str | None = None
+            имя файла для которого будет возвращен путь
+        Returns
+        -------
+        str
+            путь к файлу
+        """
+
         return get_file_path(self.analysis_folder, file_name)
 
 

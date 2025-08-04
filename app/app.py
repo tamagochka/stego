@@ -269,12 +269,12 @@ class App(object):
                                                 '\t\tдоступные параметры алгоритма:\n' \
                                                     '\t\t\tprimary_key: int - первичный ключ, используемый для генерации перестановок;\n' \
                                                     '\t\t\tcount_key_pairs: int - количество генерируемых пар ключей перестановок;\n' \
-                                                    '\t\t\tend_label:str - метка конца места погружения.')
+                                                    '\t\t\tend_label: str - метка конца места погружения.')
         # TODO добавить справку для всех методов извлечения
         self.available_args_for_extracting.append('algorithm')
         parser_extracting.add_argument('-p', '--params', type=str, help='Параметры алгоритма, используемого для извлечения.')
         self.available_args_for_extracting.append('params')
-        parser_extracting.add_argument('-s', '--stego', type=str, help='Стеганограмма из которого осуществляется извлечение вложения (скрытой в ней информации). ' \
+        parser_extracting.add_argument('-s', '--stego', type=str, help='Стеганограмма из которой осуществляется извлечение вложения (скрытой в ней информации). ' \
                                 'Поддерживаемые типы файлов: bmp.')
         self.available_args_for_extracting.append('stego')
         parser_extracting.set_defaults(func=self.extracting)
