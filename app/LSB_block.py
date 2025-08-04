@@ -18,18 +18,18 @@ def LSB_block_embedding(
         end_label: str = default_end_label
     ):
     """
-    Блочное погружение в НЗБ для большей стойкости к изменениям покрывающего объекта
+    Блочное погружение в НЗБ для большей стойкости к изменениям покрывающего объекта.
 
     Parameters
     ----------
-        cover_file_path: str
-            имя/путь к покрывающему объекту
-        stego_file_path: str
-            имя/путь к стеганограмме
-        message_file_path: str
-            имя/путь к файлу вложения
-        end_label: str = 'k0HEU'
-            метка конца места погружения
+    cover_file_path: str
+        имя/путь к покрывающему объекту
+    stego_file_path: str
+        имя/путь к стеганограмме
+    message_file_path: str
+        имя/путь к файлу вложения
+    end_label: str = 'k0HEU'
+        метка конца места погружения
     """
 
     # загрузка покрывающего объекта
@@ -122,12 +122,12 @@ def LSB_block_extracting(
 
     Parameters
     ----------
-        stego_file_path: str
-            имя/путь к стеганограмме
-        extract_file_path: str
-            путь к файлу вложения (только директория)
-        end_label: str = 'k0HEU'
-            метка конца места погружения
+    stego_file_path: str
+        имя/путь к стеганограмме
+    extract_file_path: str
+        путь к файлу вложения (только директория)
+    end_label: str = 'k0HEU'
+        метка конца места погружения
     """
     
     # загрузка стеганограммы

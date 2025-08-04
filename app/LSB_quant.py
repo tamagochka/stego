@@ -2,7 +2,8 @@ import os, sys
 from random import random
 
 from PIL import Image
-from numpy import asarray, uint8, fromfile, concatenate, copy, array_split, dstack, ndarray, zeros
+from numpy import asarray, uint8, fromfile, concatenate, copy, array_split, dstack, zeros
+from numpy.typing import NDArray
 
 from .utils import chars2bytes, bytes2chars, to_bit_vector, from_bit_vector, D2B, B2D
 
@@ -13,24 +14,21 @@ default_end_label: str = 'k0HEU'
 default_key: int = 3
 
 
-def step(byte: ndarray[uint8], scale: int) -> int:
+def step(byte: NDArray[uint8], scale: int) -> int:
     """
-    Генерация псевдослучайного интервала на основе количества единиц
-    в двоичном представлении номера последнего модифицированного байта изображения
-    умноженного на коэффициент масштабирования
+    Генерация псевдослучайного интервала на основе количества единиц в двоичном представлении номера последнего модифицированного байта изображения умноженного на коэффициент масштабирования.
     
     Parameters
     ----------
-        byte: ndarray[uint8]
-            двоичная запись числа
-        scale: int
-            коэффициент масштабирования
+    byte: NDArray[uint8]
+        двоичная запись числа
+    scale: int
+        коэффициент масштабирования
 
     Returns
     -------
-        int
-            интервал между погруженными битами
-
+    int
+        интервал между погруженными битами
     """
 
     count_bits = 0
@@ -44,11 +42,29 @@ def LSB_quant_embedding(
         cover_file_path: str,
         stego_file_path: str,
         message_file_path: str,
-        start_position: str = default_start_position,
+        start_position: int = default_start_position,
         end_label: str = default_end_label,
         key: int = default_key,
         fill_rest: bool = True
     ):
+    """
+    Погружение в НЗБ вложения методом квантования.
+
+    Parameters
+    ----------
+    cover_file_path: str
+        имя/путь к покрывающему объекту
+    stego_file_path: str
+        имя/путь к стеганограмме
+    message_file_path: str
+        имя/путь к файлу вложения
+    start_position: int = 42
+        место начала погружения
+    end_label: str = 'k0HEU'
+        метка конца вложения
+    key: int = 3
+        шаг погружения
+    """
 
     # загрузка покрывающего объекта
     cover_object = None    
@@ -88,14 +104,14 @@ def LSB_quant_embedding(
     stego_vect = copy(cover_vect)
 
     if fill_rest:
-        z = 1
+        z = uint8(1)
         while z <= cover_len:
             b = D2B(cover_vect[z])
             b[0] = round(random())
             stego_vect[z] = B2D(b)
             z += step(D2B(z), key)
 
-    z = start_position
+    z = uint8(start_position)
     for i in range(message_len):
         # определяем разницу между двумя смежными пикселями
         # максимальная разница может быть -255 или 255
@@ -130,6 +146,23 @@ def LSB_quant_extracting(
         end_label: str = default_end_label,
         key: int = default_key
     ):
+    """
+    Извлечение из НЗБ вложения, погруженного методом квантования.
+
+    Parameters
+    ----------
+    stego_file_path: str
+        имя/путь к стеганограмме
+    extract_file_path: str
+        путь к файлу вложения (только директория)
+    start_position: int = 42
+        место начала погружения
+    end_label: str = 'k0HEU'
+        метка конца места вложения
+    key: int = 3
+        шаг погружения
+    """
+
     # загрузка стеганограммы
     stego_object = None
     with Image.open(stego_file_path, 'r') as F:
@@ -146,7 +179,7 @@ def LSB_quant_extracting(
     # резервируем место под вложение
     message_bits = zeros(stego_len, dtype=uint8)
 
-    z = start_position
+    z = uint8(start_position)
     i = 0
     while z <= stego_len:
         diff = abs(int(stego_vect[z]) - int(stego_vect[z - 1]))

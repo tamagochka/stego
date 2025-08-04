@@ -1,6 +1,6 @@
 import sys
 
-from numpy import zeros, array, uint8, uint16, ndarray
+from numpy import zeros, array, uint8, ndarray
 from numpy.typing import NDArray
 
 
@@ -149,7 +149,7 @@ class MersenneTwister(object):
         elif type(range_values) == int:
             left, right = 0, range_values
         else:
-            raise TypeError('Wrong type arguments.')
+            raise TypeError('Wrong type parameters.')
         if left > right:
             left, right = right, left
         rng = right - left

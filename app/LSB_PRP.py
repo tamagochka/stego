@@ -2,7 +2,8 @@ import os, sys
 from math import floor
 
 from PIL import Image
-from numpy import concatenate, asarray, fromfile, uint8, uint16, ndarray, copy, hstack, dstack, roll, array_equal, zeros
+from numpy import concatenate, asarray, fromfile, uint8, uint16, copy, hstack, dstack, roll, array_equal, zeros
+from numpy.typing import NDArray
 
 from .utils import chars2bytes, bytes2chars, to_bit_vector, from_bit_vector, D2B, B2D
 
@@ -12,20 +13,20 @@ default_count_key_pairs: int = 10
 default_end_label: str = 'k0HEU'
 
 
-def key_pairs_gen(primary_key: int, count_key_pairs: int) -> ndarray[uint8]:
+def key_pairs_gen(primary_key: int, count_key_pairs: int) -> NDArray[uint8]:
     """
-    Генерация вектора пар ключей на основании первичного ключа
+    Генерация вектора пар ключей на основании первичного ключа.
 
     Parameters
     ----------
-        primary_key: int
-            первичный ключ
-        count_key_pairs: int
-            количество генерируемых пар ключей
+    primary_key: int
+        первичный ключ
+    count_key_pairs: int
+        количество генерируемых пар ключей
     Returns
     -------
-        ndarray[uint8]
-            вектор-строка, содержащая key_pairs пар ключей
+    ndarray[uint8]
+        вектор-строка, содержащая count_key_pairs пар ключей
 
     """
 
@@ -51,18 +52,18 @@ def LSB_PRP_embedding(
 
     Parameters
     ----------
-        cover_file_path: str
-            имя/путь к покрывающему объекту
-        stego_file_path: str
-            имя/путь к стеганограмме
-        message_file_path: str
-            имя/путь к файлу вложения
-        primary_key: int = 125
-            первичный ключ
-        count_key_pairs: int = 10
-            количество пар ключей
-        end_label: str = 'k0HEU'
-            метка конца места погружения
+    cover_file_path: str
+        имя/путь к покрывающему объекту
+    stego_file_path: str
+        имя/путь к стеганограмме
+    message_file_path: str
+        имя/путь к файлу вложения
+    primary_key: int = 125
+        первичный ключ
+    count_key_pairs: int = 10
+        количество пар ключей
+    end_label: str = 'k0HEU'
+        метка конца места погружения
     """
 
     # загрузка покрывающего объекта
@@ -112,8 +113,8 @@ def LSB_PRP_embedding(
         # остаток от деления
         y = i % Y
         for j in range(count_key_pairs):
-            x = (x + int(B2D(D2B(key_pairs[2 * j - 1]) ^ D2B(y)))) % X
-            y = (y + int(B2D(D2B(key_pairs[2 * j]) ^ D2B(x)))) % Y
+            x = (x + int(B2D(D2B(key_pairs[2 * j - 1]) ^ D2B(uint8(y))))) % X
+            y = (y + int(B2D(D2B(key_pairs[2 * j]) ^ D2B(uint8(x))))) % Y
         b = D2B(stego_arr[x, y])
         b[0] = message_bits[i]
         stego_arr[x, y] = B2D(b)
@@ -140,16 +141,16 @@ def LSB_PRP_extracting(
 
     Parameters
     ----------
-        stego_file_path: str
-            имя/путь к стеганограмме
-        extract_file_path: str
-            путь к файлу вложения (только директория)
-        primary_key: int = 125
-            первичный ключ
-        count_key_pairs: int = 10
-            количество пар ключей
-        end_label: str = 'k0HEU'
-            метка конца места погружения
+    stego_file_path: str
+        имя/путь к стеганограмме
+    extract_file_path: str
+        путь к файлу вложения (только директория)
+    primary_key: int = 125
+        первичный ключ
+    count_key_pairs: int = 10
+        количество пар ключей
+    end_label: str = 'k0HEU'
+        метка конца места погружения
     """
 
     # загрузка стеганограммы
@@ -185,8 +186,8 @@ def LSB_PRP_extracting(
         x = floor(i / Y)
         y = i % Y
         for j in range(count_key_pairs):
-            x = (x + int(B2D(D2B(key_pairs[2 * j - 1]) ^ D2B(y)))) % X
-            y = (y + int(B2D(D2B(key_pairs[2 * j]) ^ D2B(x)))) % Y
+            x = (x + int(B2D(D2B(key_pairs[2 * j - 1]) ^ D2B(uint8(y))))) % X
+            y = (y + int(B2D(D2B(key_pairs[2 * j]) ^ D2B(uint8(x))))) % Y
         b = D2B(stego_arr[x, y])
         message_bits[i] = b[0]
         # сдвигаем биты в буффере влево
