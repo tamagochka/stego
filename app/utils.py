@@ -7,6 +7,26 @@ from numpy.typing import NDArray
 class MersenneTwister(object):
     """
     Генератор псевдослучайных чисел на основе алгоритма "Вихрь Мерсена".
+
+    Attributes
+    ----------
+    seed_val: int = 0xDEADBEEF
+        значение зерна, используемого при генерации псевдослучайных чисел
+    
+    Methods
+    -------
+    set_seed(seed: int=0xDEADBEEF)
+        Задать зерно для генерации случайных чисел.
+    get_seed() -> int
+        Получить текущее значение зерна.
+    extract_number() -> int
+        Генерирует псевдо-случайное целое число в диапазоне [0..4294967296).
+    random() -> float
+        Генерирует псевдо-случайное рациональное число в диапазоне [0..1).
+    randint(range_values: int | tuple[int, int]=(1 << 32)) -> int
+        Генерирует массив ndarray псевдо-случайных целых чисел заданной формы в заданном диапазоне [a..b).
+    randarrint(shape: int | tuple[int, ...], range_values: int | tuple[int, int]=(1 << 32)) -> ndarray
+        Генерирует массив ndarray псевдо-случайных целых чисел заданной формы в заданном диапазоне [a..b).
     """
 
     n: int = 624
@@ -19,23 +39,26 @@ class MersenneTwister(object):
     t: int = 15
     l: int = 18
 
+    seed_val: int = 0xDEADBEEF
+
 
     def __init__(self, seed: int=0xDEADBEEF):
         self.MT = [0] * self.n
         self.index = 0
-        self.seed(seed)
+        self.set_seed(seed)
 
 
-    def seed(self, seed: int=0xDEADBEEF):
+    def set_seed(self, seed: int=0xDEADBEEF):
         """
         Задать зерно для генерации случайных чисел.
 
         Parameters
         ----------
-            seed: int
-                зерно
+        seed: int
+            зерно
         """
 
+        self.seed_val = seed
         self.MT[0] = seed & 0xFFFFFFFF
         for i in range(1, self.n):
             self.MT[i] = (1812433253 * (self.MT[i - 1] ^ self.MT[i - 1] >> 30)) + i
@@ -43,14 +66,26 @@ class MersenneTwister(object):
         self.index = self.n
 
 
-    def extract_number(self) -> int:
+    def get_seed(self) -> int:
         """
-        Генерирует псевдо-случайное целое число в диапазоне [0..4294967296)
+        Получить текущее значение зерна.
 
         Returns
         -------
-            int
-                псевдо-случайное целое число
+        int
+            текущее значение зерна
+        """
+        return self.seed_val
+
+
+    def extract_number(self) -> int:
+        """
+        Генерирует псевдо-случайное целое число в диапазоне [0..4294967296).
+
+        Returns
+        -------
+        int
+            псевдо-случайное целое число
         """
 
         if self.index >= self.n:
@@ -75,12 +110,12 @@ class MersenneTwister(object):
 
     def random(self) -> float:
         """
-        Генерирует псевдо-случайное рациональное число в диапазоне [0..1)
+        Генерирует псевдо-случайное рациональное число в диапазоне [0..1).
 
         Returns
         -------
-            float
-                псевдо-случайное рациональное число
+        float
+            псевдо-случайное рациональное число
         """
 
         return self.extract_number() / 4294967296.0  # нормирование к диапазону [0.. 1)
@@ -88,17 +123,24 @@ class MersenneTwister(object):
 
     def randint(self, range_values: int | tuple[int, int]=(1 << 32)) -> int:
         """
-        Генерирует псевдо-случайное целое число в заданном диапазоне [a..b)
+        Генерирует псевдо-случайное целое число в заданном диапазоне [a..b).
 
         Parameters
         ----------
-            range_values: int | tuple[int, int]=(1 << 32)
-                диапазон [a..b), если указано только один аргумент, то [0..b), если аргументов нет, то [0, 4294967296)
+        range_values: int | tuple[int, int]=(1 << 32)
+            диапазон [a..b), если указано только один аргумент, то [0..b), если аргументов нет, то [0, 4294967296)
 
         Returns
         -------
-            int
-                псевдо-случайное целое число в заданном диапазоне
+        int
+            псевдо-случайное целое число в заданном диапазоне
+
+        Raises
+        ------
+        TypeError
+            если переданные аргументы не являются ini или tuple[int,int]
+        NotImplementedError
+            если заданные диапазон для генереции больше, чем 2^32
         """
 
         left, right = 0, 0
@@ -132,18 +174,18 @@ class MersenneTwister(object):
 
     def randarrint(self, shape: int | tuple[int, ...], range_values: int | tuple[int, int]=(1 << 32)) -> ndarray:
         """
-        Генерирует массив ndarray псевдо-случайных целых чисел заданной формы в заданном диапазоне [a..b)
+        Генерирует массив ndarray псевдо-случайных целых чисел заданной формы в заданном диапазоне [a..b).
 
         Parameters
         ----------
-            shape:  int | tuple[int, ...]
-                форма массива, размерность по всем измерениям
-            range_values: int | tuple[int, int]=(1 << 32)
-                диапазон [a..b), если указано только один аргумент, то [0..b), если аргументов нет, то [0, 4294967296)
+        shape:  int | tuple[int, ...]
+            форма массива, размерность по всем измерениям
+        range_values: int | tuple[int, int]=(1 << 32)
+            диапазон [a..b), если указано только один аргумент, то [0..b), если аргументов нет, то [0, 4294967296)
         Returns
         -------
-            ndarray
-                массив псевдо-случайных целых чисел заданной формы в заданном диапазоне
+        ndarray
+            массив псевдо-случайных целых чисел заданной формы в заданном диапазоне
         """
 
         arr = zeros(shape=(shape), dtype=int)
@@ -153,17 +195,17 @@ class MersenneTwister(object):
 
 def B2D(vector_bits: NDArray[uint8]) -> uint8:
     """
-    Перевод числа из двоичной вектор-строки длиной 8 символов в десятичный байт
+    Перевод числа из двоичной вектор-строки длиной 8 символов в десятичный байт.
 
     Parameters
     ----------
-        vector_bits: NDArray[uint8]
-            двоичная вектор-строка длинной 8 символов
+    vector_bits: NDArray[uint8]
+        двоичная вектор-строка длинной 8 символов
 
     Returns
     -------
-        uint8
-            десятичный байт
+    uint8
+        десятичный байт
     """
 
     byte = uint8(0)
@@ -174,17 +216,17 @@ def B2D(vector_bits: NDArray[uint8]) -> uint8:
 
 def D2B(byte: uint8) -> NDArray[uint8]:
     """
-    Перевод числа из десятичного байта в двоичную вектор-строку
+    Перевод числа из десятичного байта в двоичную вектор-строку.
 
     Parameters
     ----------
-        byte: uint8
-            десятичный байт
+    byte: uint8
+        десятичный байт
     
     Returns
     -------
-        NDArray[uint8]
-            двоичная вектор-строка длинной 8 символов
+    NDArray[uint8]
+        двоичная вектор-строка длинной 8 символов
     """
     
     vector_bits = zeros(8, dtype=uint8)
@@ -196,17 +238,17 @@ def D2B(byte: uint8) -> NDArray[uint8]:
 
 def to_bit_vector(vector_bytes: NDArray[uint8]) -> NDArray[uint8]:
     """
-    Преобразовать десятичную байтовую вектор-строку произвольной длинны (n) в двоичную вектор-строку длинны (n * 8)
+    Преобразовать десятичную байтовую вектор-строку произвольной длинны (n) в двоичную вектор-строку длинны (n * 8).
     
     Parameters
     ----------
-        vector_bytes: NDArray[uint8]
-            десятичная байтовая вектор-строка
+    vector_bytes: NDArray[uint8]
+        десятичная байтовая вектор-строка
     
     Returns
     -------
-        NDArray[uint8]
-            двоичная вектор-строка
+    NDArray[uint8]
+        двоичная вектор-строка
     """
 
     vector_bytes_len = len(vector_bytes)
@@ -222,17 +264,17 @@ def to_bit_vector(vector_bytes: NDArray[uint8]) -> NDArray[uint8]:
 
 def from_bit_vector(vector_bits: NDArray[uint8]) -> NDArray[uint8]:
     """
-    Преобразовать двоичную вектор-строку длинной (n) в десятичную байтовую вектор-строку длинной (n // 8)
+    Преобразовать двоичную вектор-строку длинной (n) в десятичную байтовую вектор-строку длинной (n // 8).
 
     Parameters
     ----------
-        vector_bits: ndarray[uint8]
-            двоичная вектор-строка
+    vector_bits: ndarray[uint8]
+        двоичная вектор-строка
 
     Returns
     -------
-        NDArray[uint8]
-            десятичная вектор-строка
+    NDArray[uint8]
+        десятичная вектор-строка
     """
 
     vector_bits_len = len(vector_bits)
@@ -251,17 +293,17 @@ def from_bit_vector(vector_bits: NDArray[uint8]) -> NDArray[uint8]:
 
 def bytes2chars(vector_bytes: NDArray[uint8]) -> str:
     """
-    Преобразовать вектор-строку десятичных байтов в строку, соответствующих им, символов
+    Преобразовать вектор-строку десятичных байтов в строку, соответствующих им, символов.
     
     Parameters
     ----------
-        vector_bytes: NDArray[uint8]
-            вектор-строка байтов
+    vector_bytes: NDArray[uint8]
+        вектор-строка байтов
 
     Returns
     -------
-        str
-            строка символов
+    str
+        строка символов
     """
 
     vector_chars = ''.join([chr(b) for b in vector_bytes])
@@ -274,13 +316,13 @@ def chars2bytes(vector_chars: str) -> NDArray[uint8]:
 
     Parameters
     ----------
-        vector_chars: str
-            вектор-строка символов
+    vector_chars: str
+        вектор-строка символов
 
     Returns
     -------
-        NDArray[int]
-            вектор-строка байтов
+    NDArray[int]
+        вектор-строка байтов
     """
     
     return array([ord(ch) for ch in list(vector_chars)], dtype=uint8)

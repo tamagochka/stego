@@ -5,69 +5,94 @@ from dataclasses import dataclass
 import toml
 
 
-def check_dir(dir_name: str):
+def check_dir(dir_name: str | None):
+    """
+    Проверяет, существует ли директория с заданным именем, если нет, то создает.
+
+    Attributes
+    ----------
+    dir_name: str | None
+        имя директории
+    """
+
     if dir_name:
         if not os.path.isdir(dir_name):
             os.makedirs(dir_name)
 
 
-def get_file_path(folder_name: str, file_name: str):
+def get_file_path(folder_name: str | None, file_name: str | None) -> str:
+    """
+    Соединяет между собой имя файли и директории, если они были заданы. Иначе возвращает либо имя файла, если не задана директория. Либо имя директории, если не задан файл. Или пустую строку, если не задано ни то ни другое.
+
+    Attributes
+    ----------
+    folder_name: str | None
+        имя директории
+
+    file_name: str | None
+        имя файла
+
+    Returns
+    -------
+    str
+        результат объединения или пустая строка
+    """
+
     file_path = file_name
     if folder_name:
         file_path = folder_name
     if folder_name and file_name:
         file_path = os.path.join(folder_name, file_name)
+    if not file_path:
+        return ''
     return file_path
 
 
 @dataclass
 class AppConfig(object):
     """
-    Класс для хранения конфигурации приложения
+    Класс для хранения конфигурации приложения.
     
     Attributes
     ----------
-        config_file: str = None
-            путь к файлу конфигурации
-        log_level: int = logging.WARN
-            уровень логирования
-        log_format: str = '%(asctime)s - [%(levelname)s] - %(funcName)s - %(message)s'
-            формат логов
-        log_to_console: bool = True
-            выводить лог в консоль
-        log_to_file: bool = False
-            выводить лог в файл
-        log_file_dir: str = '.'
-            путь к лог-файлам
-        log_file_name: str = 'stego.log'
-            шаблон имени лог-файлов
-        log_file_max_bytes: int = 5242880
-            максимальный размер лог-файла, после которого создается новый
-        log_files_count: int = 10
-            максимальное количество лог-файлов, хранящихся на компьютере
-        
-        директории для хранения данных:
-        extracts_folder: str = None
-            директория с извлеченными вложениями
-        covers_folder: str = None
-            дирректория с покрывающими объектами
-        stegos_folder: str = None
-            директория с полученными стеганограммами
-        messages_folder: str = None
-            дирктороия с вложениями
-        analysis_folder: str = None
-            директория с результатами стегоанализа
-        если заданы директории для хранения данных, то программа будет искать и сохранять файлы в них,
-        иначе будет использоваться путь, заданный пользователем
+    config_file: str = None
+        путь к файлу конфигурации
+    log_level: int = logging.WARN
+        уровень логирования
+    log_format: str = '%(asctime)s - [%(levelname)s] - %(funcName)s - %(message)s'
+        формат логов
+    log_to_console: bool = True
+        выводить лог в консоль
+    log_to_file: bool = False
+        выводить лог в файл
+    log_file_dir: str = '.'
+        путь к лог-файлам
+    log_file_name: str = 'stego.log'
+        шаблон имени лог-файлов
+    log_file_max_bytes: int = 5242880
+        максимальный размер лог-файла, после которого создается новый
+    log_files_count: int = 10
+        максимальное количество лог-файлов, хранящихся на компьютере
+    
+    extracts_folder: str = None
+        директория с извлеченными вложениями
+    covers_folder: str = None
+        дирректория с покрывающими объектами
+    stegos_folder: str = None
+        директория с полученными стеганограммами
+    messages_folder: str = None
+        дирктороия с вложениями
+    analysis_folder: str = None
+        директория с результатами стегоанализа
+    Если заданы директории для хранения данных, то программа будет искать и сохранять файлы в них, иначе будет использоваться путь, заданный пользователем.
 
     Methods
     -------
-        apply_config()
-            применить конфигурацию, если в конфигурации заданы директории для хранения данных,
-            то они будут созданы при применении конфигурации
+    apply_config()
+        применить конфигурацию, если в конфигурации заданы директории для хранения данных, то они будут созданы при применении конфигурации
     """
 
-    config_file: str = None
+    config_file: str | None = None
 
     log_level: int = logging.WARN
     log_format: str = '%(asctime)s - [%(levelname)s] - %(funcName)s - %(message)s'
@@ -78,11 +103,11 @@ class AppConfig(object):
     log_file_max_bytes: int = 5242880
     log_files_count: int = 10
 
-    extracts_folder: str = None
-    covers_folder: str = None
-    stegos_folder: str = None
-    messages_folder: str = None
-    analysis_folder: str = None
+    extracts_folder: str | None = None
+    covers_folder: str | None = None
+    stegos_folder: str | None = None
+    messages_folder: str | None = None
+    analysis_folder: str | None = None
 
 
     def __init__(self, config_file: str | None):
@@ -133,6 +158,10 @@ class AppConfig(object):
 
 
     def apply_config(self):
+        """
+        Применить конфигурацию, если в конфигурации заданы директории для хранения данных, то они будут созданы при применении конфигурации.
+        """
+
         if self.log_to_file:
             if not os.path.isdir(self.log_file_dir):
                 os.makedirs(self.log_file_dir)
@@ -161,22 +190,21 @@ class AppConfig(object):
         check_dir(self.analysis_folder)
    
 
-    def get_extracts_file_path(self, file_name: str = None) -> str:
+    def get_extracts_file_path(self, file_name: str | None = None) -> str:
         return get_file_path(self.extracts_folder, file_name)
     
-    def get_covers_file_path(self, file_name: str = None) -> str:
+    def get_covers_file_path(self, file_name: str  | None= None) -> str:
         return get_file_path(self.covers_folder, file_name)
 
-    def get_stegos_file_path(self, file_name: str = None) -> str:
+    def get_stegos_file_path(self, file_name: str | None = None) -> str:
         return get_file_path(self.stegos_folder, file_name)
 
-    def get_messages_file_path(self, file_name: str = None) -> str:
+    def get_messages_file_path(self, file_name: str | None = None) -> str:
         return get_file_path(self.messages_folder, file_name)
 
-    def get_analysis_file_path(self, file_name: str = None) -> str:
+    def get_analysis_file_path(self, file_name: str | None = None) -> str:
         return get_file_path(self.analysis_folder, file_name)
 
 
 if __name__ == '__main__':
     sys.exit()
-    
