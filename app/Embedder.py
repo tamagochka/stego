@@ -1,4 +1,5 @@
 import os
+import sys
 from typing import Any
 from abc import ABC, abstractmethod
 
@@ -20,12 +21,14 @@ class Embedder(ABC):
     cover_object: NDArray[uint8] | None = None
     message_object: NDArray[uint8] | None = None
     stego_object: NDArray[uint8] | None = None
-
     message_file_name: str | None = None
     message_bits: NDArray[uint8] | None = None
     message_len: int | None = None
-
     params: dict[str, Any] | None = None
+
+
+    def set_params(self, **params: dict[str, Any]):
+        self.params = params
 
 
     def load_cover_file(self, cover_file_path: str):
@@ -39,10 +42,6 @@ class Embedder(ABC):
             self.message_file_name = os.path.basename(F.name)
 
     
-    def set_params(self, **params):
-        self.params = params
-
-
     def prepare_message_object(self) -> bool:
         if self.message_file_name is None or self.message_object is None:
             return False
@@ -79,7 +78,7 @@ class Embedder(ABC):
                 F.save(stego_file_path)
 
 
-    def process_one_file(self, cover_file_path, stego_file_path, message_file_path, **params):
+    def process_one_file(self, cover_file_path, stego_file_path, message_file_path, **params: dict[str, Any]):
         self.set_params(**params)
         self.load_cover_file(cover_file_path)
         self.load_message_file(message_file_path)
@@ -88,3 +87,5 @@ class Embedder(ABC):
         self.save_stego_file(stego_file_path)
 
 
+if __name__ == '__main__':
+    sys.exit()

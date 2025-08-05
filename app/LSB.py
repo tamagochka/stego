@@ -22,8 +22,7 @@ class LSB_embedding(Embedder):
             fill_rest = self.params['fill_rest']
 
         # получаем цветовые составляющие изображения
-        if self.cover_object is None:
-            return
+        if self.cover_object is None: return
         cover_red = concatenate(self.cover_object[:, :, 0])
         cover_green = concatenate(self.cover_object[:, :, 1])
         cover_blue = concatenate(self.cover_object[:, :, 2])
