@@ -5,6 +5,11 @@ from dataclasses import dataclass
 import toml
 
 
+# метки начала и конца места погружения вложения в покрывающий объект по умолчанию
+default_start_label: str = 'H@4@l0'
+default_end_label: str = 'k0HEU'
+
+
 def check_dir(dir_name: str | None):
     """
     Проверяет, существует ли директория с заданным именем, если нет, то создает.

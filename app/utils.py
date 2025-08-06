@@ -355,5 +355,31 @@ def key_pairs_gen(primary_key: int, count_key_pairs: int) -> NDArray[uint8]:
     return key_pairs.astype(uint8)
 
 
+def step(byte: NDArray[uint8], scale: int) -> int:
+    """
+    Генерация псевдослучайного интервала на основе количества единиц
+    в двоичном представлении номера последнего модифицированного байта 
+    изображения умноженного на коэффициент масштабирования
+    
+    Parameters
+    ----------
+    byte: NDArray[uint8]
+        двоичная запись числа
+    scale: int
+        коэффициент масштабирования
+
+    Returns
+    -------
+    int
+        интервал между погруженными битами
+    """
+
+    count_bits = 0
+    for i in range(len(byte)):
+        count_bits += byte[i]
+    count_bits = 1 if count_bits == 0 else count_bits
+    return int(count_bits * scale)
+
+
 if __name__ == '__main__':
     sys.exit()

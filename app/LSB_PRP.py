@@ -1,22 +1,22 @@
-import os, sys
+import sys
 from math import floor
 
-from numpy import uint8, uint32, copy, hstack, dstack, roll, array_equal, zeros
+from numpy import uint8, copy, hstack, dstack, roll, array_equal, zeros
 
 from .utils import chars2bytes, to_bit_vector, D2B, B2D, key_pairs_gen
+from .config import default_end_label
 from .Embedder import Embedder
 from .Extractor import Extractor
 
 
-# метка конца места погружения вложения в покрывающий объект ключ по умолчанию и количество пар ключей
+# значения по умолчанию параметров уникальных для алгоритма
 default_primary_key: int = 42
 default_count_key_pairs: int = 10
-default_end_label: str = 'k0HEU'
 
 
 class LSB_PRP_embedding(Embedder):
     """
-    Реализация алгоритма погружения в НЗБ вложения, с псевдослучайной перестановкой бит вложения.
+    Реализация алгоритма погружения в НЗБ вложения с псевдослучайной перестановкой бит вложения.
     Получает из свойства родителя params параметр работы:
     {'primary_key': 42}
         первичный ключ

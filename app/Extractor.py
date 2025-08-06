@@ -8,11 +8,7 @@ from numpy.typing import NDArray
 from numpy import uint8, asarray
 
 from .utils import from_bit_vector, bytes2chars, chars2bytes
-
-
-# метки начала и конца места погружения вложения в покрывающий объект
-default_start_label: str = 'H@4@l0'
-default_end_label: str = 'k0HEU'
+from .config import default_start_label, default_end_label
 
 
 class Extractor(ABC):

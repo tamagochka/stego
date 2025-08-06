@@ -9,11 +9,7 @@ from numpy.typing import NDArray
 from numpy import asarray, uint8, fromfile, concatenate
 
 from .utils import chars2bytes, to_bit_vector
-
-
-# метки начала и конца места погружения вложения в покрывающий объект
-default_start_label: str = 'H@4@l0'
-defualt_end_label: str = 'k0HEU'
+from .config import default_start_label, default_end_label
 
 
 class Embedder(ABC):
@@ -90,7 +86,7 @@ class Embedder(ABC):
         if self.params and 'start_label' in self.params:
             start_label = self.params['start_label']
         start_label_bytes = chars2bytes(start_label)
-        end_label = defualt_end_label
+        end_label = default_end_label
         if self.params and 'end_label' in self.params:
             end_label = self.params['end_label']
         end_label_bytes = chars2bytes(end_label)

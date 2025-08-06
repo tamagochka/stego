@@ -57,7 +57,7 @@ class App(object):
             params = eval(f'dict({self.args.params})')
         embedding_algorithms = {
             'lsb': LSB_embedding,
-            # 'pri': LSB_PRI_embedding,
+            'pri': LSB_PRI_embedding,
             'prp': LSB_PRP_embedding,
             # 'block': LSB_block_embedding,
             # 'quant': LSB_quant_embedding,
@@ -93,7 +93,7 @@ class App(object):
             sys.exit()
         extracting_algorithms = {
             'lsb': LSB_extracting,
-            # 'pri': LSB_PRI_extracting,
+            'pri': LSB_PRI_extracting,
             'prp': LSB_PRP_extracting,
             # 'block': LSB_block_extracting,
             # 'quant': LSB_quant_extracting,
