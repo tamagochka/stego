@@ -1,7 +1,7 @@
 import sys
 import math
 
-from numpy import copy, uint8, zeros, roll, array_equal
+from numpy import copy, uint8, uint32, zeros, roll, array_equal
 
 from .utils import chars2bytes, to_bit_vector, MersenneTwister
 from .config import default_end_label
@@ -107,7 +107,7 @@ class LSB_kdb_extracting(Extractor):
         end_label_bits_len = len(end_label_bits)
         # буффер в который будут помещаться последние извлеченные биты
         # для проверки их на совпадение с меткой конца места погружения
-        check_end_label_bits = zeros(end_label_bits_len, dtype=int)
+        check_end_label_bits = zeros(end_label_bits_len, dtype=uint8)
         # инициализация генератора случайных чисел на основе ключа
         mstw = MersenneTwister(key)
 
@@ -119,9 +119,9 @@ class LSB_kdb_extracting(Extractor):
                 Cx = mstw.randint((4, self.stego_object.shape[0] - 4))
                 Cy = mstw.randint((4, self.stego_object.shape[1] - 4))
                 # делаем предсказание о яркости текущего пикселя по значениям соседних
-                prediction = (sum(self.stego_object[Cx - sigma : Cx + sigma + 1, Cy, 2]) + \
-                    sum(self.stego_object[Cx, Cy - sigma : Cy + sigma + 1, 2]) - \
-                    2 * self.stego_object[Cx, Cy, 2]) / (4 * sigma)
+                prediction = (sum(self.stego_object[Cx - sigma : Cx + sigma + 1, Cy, 2].astype(uint32)) + \
+                    sum(self.stego_object[Cx, Cy - sigma : Cy + sigma + 1, 2].astype(uint32)) - \
+                    2 * self.stego_object[Cx, Cy, 2].astype(uint32)) / (4 * sigma)
                 # вычисляем разницу между предсказанным и реальным значением яркости
                 diff = self.stego_object[Cx, Cy, 2] - prediction
                 if math.isclose(diff, 0) and math.isclose(prediction, 255):
