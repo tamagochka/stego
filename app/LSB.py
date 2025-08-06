@@ -1,10 +1,9 @@
-import os, sys
+import sys
 from random import random
 
-from PIL import Image
-from numpy import uint8, copy, zeros, asarray, fromfile, concatenate, array_split, dstack
+from numpy import uint8, copy, zeros, concatenate, array_split, dstack
 
-from .utils import D2B, B2D, chars2bytes, bytes2chars, to_bit_vector, from_bit_vector
+from .utils import D2B, B2D
 from .Embedder import Embedder
 from .Extractor import Extractor
 
@@ -101,65 +100,6 @@ class LSB_extracting(Extractor):
             b = D2B(stego_vect[i])
             # сохраняем НЗБ стеганограммы как бит вложения
             self.message_bits[i] = b[0]
-
-
-
-# def LSB_extracting(
-#         stego_file_path: str,
-#         extract_file_path: str,
-#         start_label: str = default_start_label,
-#         end_label: str = defualt_end_label
-#     ):
-#     """
-#     Извлечение из НЗБ вложения, погруженного с использованием непрерывного замещения бит.
-
-#     Parameters
-#     ----------
-#     stego_file_path: str
-#         имя/путь к стеганограмме
-#     extract_file_path: str
-#         путь к файлу вложения (только директория)
-#     start_label: str = 'H@4@l0'
-#         метка начала места погружения
-#     end_label: str = 'k0HEU'
-#         метка конца места погружения
-#     """
-    
-#     # загрузка стеганограммы
-#     stego_object = None
-#     with Image.open(stego_file_path, 'r') as F:
-#         stego_object = asarray(F, dtype=uint8)
-
-#     # получаем цветовые составляющие изображения
-#     stego_red = concatenate(stego_object[:, :, 0])
-#     stego_green = concatenate(stego_object[:, :, 1])
-#     stego_blue = concatenate(stego_object[:, :, 2])
-#     # собираем все цветовые составляющие в одну вектор-строку байт
-#     stego_vect = concatenate([stego_red, stego_green, stego_blue])
-
-#     stego_len = len(stego_vect)
-#     # резервируем место под вложение
-#     message_bits = zeros(stego_len, dtype=uint8)
-
-#     for i in range(stego_len):
-#         # байт стеганограммы в двоичный вид
-#         b = D2B(stego_vect[i])
-#         # сохраняем НЗБ стеганограммы как бит вложения
-#         message_bits[i] = b[0]
-
-#     # выделяем вложение
-#     message_bytes = from_bit_vector(message_bits)
-#     message = bytes2chars(message_bytes)
-#     message = message[message.find(start_label) + len(start_label):message.find(end_label)]
-
-#     message_file_name_len = chars2bytes(message[0])[0]
-#     message_file_name = message[1:message_file_name_len + 1]
-
-#     if not extract_file_path:
-#         extract_file_path = '.'
-#     message_file_path = os.path.join(extract_file_path, message_file_name)
-#     with open(message_file_path, 'bw') as F:
-#         F.write(chars2bytes(message[message_file_name_len + 1:]))
 
 
 if __name__ == '__main__':
