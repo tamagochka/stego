@@ -9,10 +9,11 @@ from .Embedder import Embedder
 from .Extractor import Extractor
 
 
-default_key: int = 42  # ключ на основе которого генерируются ПСЧ для определения координат места погружения бит вложения
-default_luminance: float = 0.1  # коээфициент яркости пикселя с погруженными битами
-default_repeats: int = 5  # число мест погружения каждого бита вложения
-default_sigma: int = 3  # размер креста из пикселей на основе которых вычисляется прогнозируемое значение яркости пикселя, расположенного в центре креста
+# значения по умолчанию параметров уникальных для алгоритма
+default_key: int = 42
+default_luminance: float = 0.1
+default_repeats: int = 5
+default_sigma: int = 3
 
 
 class LSB_kdb_embedding(Embedder):

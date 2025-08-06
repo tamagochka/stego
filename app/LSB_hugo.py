@@ -1,18 +1,19 @@
-import os
 import sys
 from math import sqrt, exp, log
 
-from PIL import Image
-from numpy import asarray, uint8, fromfile, concatenate, zeros, uint32, inf, float32, copy, int16, int32, float64, uint32, finfo
+from numpy import uint8, zeros, uint32, inf, float32, copy, int16, int32, float64, finfo
 from numpy.typing import NDArray
 
-from .utils import chars2bytes, to_bit_vector, MersenneTwister
+from .utils import MersenneTwister
+from .Embedder import Embedder
+from .Extractor import Extractor
 
 
-default_T = 90
-default_inv_sigma = 1
-default_inv_gamma = 1
-default_seed = 42
+# значения по умолчанию параметров уникальных для алгоритма
+default_T: int = 90
+default_inv_sigma: float = 1
+default_inv_gamma: float = 1
+default_seed: int = 42
 
 
 class HugoModel(object):
@@ -23,7 +24,7 @@ class HugoModel(object):
     width: uint32 = uint32(0)
     height: uint32 = uint32(0)
     n: uint32 = uint32(0)
-    T: uint32 = uint32(0)
+    T: int32 = int32(0)
     inv_sigma: float32 = float32(0)
     inv_gamma: float32 = float32(0)
     cover_pixel: NDArray
@@ -36,7 +37,7 @@ class HugoModel(object):
         self.width = uint32(cover.shape[0])
         self.height = uint32(cover.shape[1])
         self.n = self.width * self.height
-        self.T = T
+        self.T = int32(T)
         self.inv_sigma = inv_sigma
         self.inv_gamma = inv_gamma
         self.cover_pixel = copy(cover)
@@ -45,7 +46,7 @@ class HugoModel(object):
         self.distortion = float64(0)
 
 
-    def CD(self, type: int, d1: int, d2: int, d3: int) -> uint32:
+    def CD(self, type: int, d1: int, d2: int, d3: int) -> int32:
         assert d1 <= self.T
         assert d1 >= -self.T
         assert d2 <= self.T
@@ -334,61 +335,47 @@ class HugoAlgSimulator(object):
         return stego
 
 
-def LSB_hugo_embedding(
-        cover_file_path: str,
-        stego_file_path: str,
-        message_file_path: str,
-        T: int = default_T,
-        inv_sigma: float = default_inv_sigma,
-        inv_gamma: float = default_inv_gamma,
-        seed: int = default_seed
-    ):
+class LSB_hugo_embedding(Embedder):
     """
-    
-    
+    Реализация алгоритма погружения в НЗБ HUGO (High Undetectable steGO)
+    Получает из свойства родителя params параметр работы:
+    {'default_T': 90}
+
+    {'default_inv_sigma': 1}
+
+    {'default_inv_gamma': 1}
+
+    {'default_seed': 42}
+
     """
 
-    # загрузка покрывающего объекта
-    cover_object = None
-    with Image.open(cover_file_path) as F:
-        cover_object = asarray(F, dtype=uint8)
+    def embeding(self):
+        # получаем параметры работы алгоритма
+        T = default_T
+        if self.params and 'T' in self.params:
+            T = self.params['T']
+        inv_sigma = default_inv_sigma
+        if self.params and 'inv_sigma' in self.params:
+            inv_sigma = self.params['inv_sigma']
+        inv_gamma = default_inv_gamma
+        if self.params and 'inv_gamma' in self.params:
+            inv_gamma = self.params['inv_gamma']
+        seed = default_seed
+        if self.params and 'seed' in self.params:
+            seed = self.params['seed']
 
-    # загрузка вложения
-    message_object = None
-    with open(message_file_path, 'rb') as F:
-        message_object = fromfile(F, dtype=uint8)
-        message_file_name = os.path.basename(F.name)
+        # соединяем двумерные цветовые плоскости в один двумерный массив
+        # cover_arr = hstack((cover_object))  # TODO распространить на несколько цветовых плоскостей
 
-    # преобразуем метку конца сообщения, имя файла вложения и длинну его имени в байтовые вектор-строки
-    message_file_name_bytes = chars2bytes(message_file_name)
-    message_file_name_bytes_len = asarray([len(message_file_name_bytes)])
-    # собираем все в одину вектор-строку байт
-    message_bytes = concatenate((
-        message_file_name_bytes_len,
-        message_file_name_bytes,
-        message_object))
-    # преобразуем вктор-строку байт в вектор-строку бит
-    message_bits = to_bit_vector(message_bytes)
-    message_len = len(message_bits)
+        rel_payload: list[float32] = [float32(1)]
+        corr_strategy: uint32 = uint32(2)
+        n_changes: list[uint32] = [uint32(0)]
+        distortion: list[float32] = [float32(0)]
 
-    # соединяем двумерные цветовые плоскости в один двумерный массив
-    # cover_arr = hstack((cover_object))  # TODO распространить на несколько цветовых плоскостей
-
-    rel_payload: list[float32] = [float32(1)]
-    corr_strategy: uint32 = uint32(2)
-    n_changes: list[uint32] = [uint32(0)]
-    distortion: list[float32] = [float32(0)]
-
-
-
-    hugo = HugoAlgSimulator(cover_object, uint32(T), float32(inv_sigma), float32(inv_gamma), uint32(seed))
-    hugo.embed_random_message(rel_payload=rel_payload, corr_strategy=corr_strategy, n_changes=n_changes, distortion=distortion)
-
-    stego_object = hugo.get_image()
-    
-
-    with Image.fromarray(stego_object) as F:
-        F.save(stego_file_path)
+        if self.cover_object is None: return
+        hugo = HugoAlgSimulator(self.cover_object, uint32(T), float32(inv_sigma), float32(inv_gamma), uint32(seed))
+        hugo.embed_random_message(rel_payload=rel_payload, corr_strategy=corr_strategy, n_changes=n_changes, distortion=distortion)
+        self.stego_object = hugo.get_image()
 
 
 if __name__ == '__main__':

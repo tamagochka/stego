@@ -62,7 +62,7 @@ class App(object):
             'block': LSB_block_embedding,
             'quant': LSB_quant_embedding,
             'kdb': LSB_kdb_embedding,
-            # 'hugo': LSB_hugo_embedding
+            'hugo': LSB_hugo_embedding
         }
         # embedding_algorithms[algorithm](cover_file_path, stego_file_path, message_file_path, **params if params else {})  # распаковываем параметры из словаря, если они были переданы
         emedder = embedding_algorithms[algorithm]()
