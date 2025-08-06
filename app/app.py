@@ -61,7 +61,7 @@ class App(object):
             'prp': LSB_PRP_embedding,
             'block': LSB_block_embedding,
             'quant': LSB_quant_embedding,
-            # 'kdb': LSB_kdb_embedding,
+            'kdb': LSB_kdb_embedding,
             # 'hugo': LSB_hugo_embedding
         }
         # embedding_algorithms[algorithm](cover_file_path, stego_file_path, message_file_path, **params if params else {})  # распаковываем параметры из словаря, если они были переданы
@@ -97,7 +97,7 @@ class App(object):
             'prp': LSB_PRP_extracting,
             'block': LSB_block_extracting,
             'quant': LSB_quant_extracting,
-            # 'kdb': LSB_kdb_extracting
+            'kdb': LSB_kdb_extracting
         }
         extractor = extracting_algorithms[algorithm]()
         extractor.process_one_file(stego_file_path, extract_file_path, **params if params else {})  # распаковываем параметры из словаря, если они были переданы
