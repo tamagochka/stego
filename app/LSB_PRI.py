@@ -1,10 +1,9 @@
-import os, sys
+import sys
 from random import random
 
-from PIL import Image
-from numpy import copy, zeros, uint8, asarray, concatenate, fromfile, array_split, dstack
+from numpy import copy, zeros, uint8, concatenate, array_split, dstack
 
-from .utils import D2B, B2D, chars2bytes, bytes2chars, to_bit_vector, from_bit_vector, step
+from .utils import D2B, B2D, step
 from .Embedder import Embedder
 from .Extractor import Extractor
 
@@ -22,7 +21,7 @@ class LSB_PRI_embedding(Embedder):
     {'start_position': 42}
         место начала погружения
     {'key': 3}
-        ключ, задающий масштабирование шага встраивания (расстояние между битами вложения)
+        ключ, задающий масштабирование шага погружения (расстояние между битами вложения)
     {'fill_rest': True}
         заполнять незаполненную часть покрывающего объекта случайными битами или нет
     """
@@ -68,7 +67,7 @@ class LSB_PRI_embedding(Embedder):
             b = D2B(cover_vect[z])
             b[0] = self.message_bits[i]
             stego_vect[z] = B2D(b)
-            # определяем следующее место встраивания
+            # определяем следующее место погружения
             z += step(D2B(uint8(z & 0xFF)), key)
 
         # собираем изображение обратно
@@ -86,7 +85,7 @@ class LSB_PRI_extracting(Extractor):
     {'start_position': 42}
         место начала погружения
     {'key': 3}
-        ключ, задающий масштабирование шага встраивания (расстояние между битами вложения)
+        ключ, задающий масштабирование шага погружения (расстояние между битами вложения)
     """
 
     def extracting(self):
