@@ -1,4 +1,4 @@
-import os, sys
+import sys
 
 from numpy import asarray, uint8, expand_dims
 from PIL import Image

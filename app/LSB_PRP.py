@@ -26,12 +26,8 @@ class LSB_PRP_embedding(Embedder):
 
     def embeding(self):
         # получаем параметры работы алгоритма
-        primary_key = default_primary_key
-        if self.params and 'primary_key' in self.params:
-            primary_key = self.params['primary_key']
-        count_key_pairs = default_count_key_pairs
-        if self.params and 'count_key_pairs' in self.params:
-            count_key_pairs = self.params['count_key_pairs']
+        primary_key = (self.params or {}).get('primary_key', default_primary_key)
+        count_key_pairs = (self.params or {}).get('count_key_pairs', default_count_key_pairs)
         # получаем цветовые составляющие изображения
         if self.cover_object is None: return
         cover_red = self.cover_object[:, :, 0]
@@ -85,15 +81,9 @@ class LSB_PRP_extracting(Extractor):
 
     def extracting(self):
         # получаем параметры работы алгоритма
-        primary_key = default_primary_key
-        if self.params and 'primary_key' in self.params:
-            primary_key = self.params['primary_key']
-        count_key_pairs = default_count_key_pairs
-        if self.params and 'count_key_pairs' in self.params:
-            count_key_pairs = self.params['count_key_pairs']
-        end_label = default_end_label
-        if self.params and 'end_label' in self.params:
-            end_label = self.params['end_label']
+        primary_key = (self.params or {}).get('primary_key', default_primary_key)
+        count_key_pairs = (self.params or {}).get('count_key_pairs', default_count_key_pairs)
+        end_label = (self.params or {}).get('end_label', default_end_label)
         # получаем цветовые составляющие изображения
         if self.stego_object is None: return
         stego_red = self.stego_object[:, :, 0]

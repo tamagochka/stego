@@ -22,9 +22,7 @@ class LSB_embedding(Embedder):
 
     def embeding(self):
         # получаем параметры работы алгоритма
-        fill_rest: bool = default_fill_rest
-        if self.params and 'fill_rest' in self.params:
-            fill_rest = self.params['fill_rest']
+        fill_rest = (self.params or {}).get('fill_rest', default_fill_rest)
         # получаем цветовые составляющие изображения
         if self.cover_object is None: return
         cover_red = concatenate(self.cover_object[:, :, 0])

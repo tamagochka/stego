@@ -82,13 +82,9 @@ class Embedder(ABC):
             return False
         # преобразуем метки начала и конца места погружения,
         # а также имя файла вложения и длинну его имени в байтовые вектор-строки
-        start_label = default_start_label
-        if self.params and 'start_label' in self.params:
-            start_label = self.params['start_label']
+        start_label = (self.params or {}).get('start_label', default_start_label)
         start_label_bytes = chars2bytes(start_label)
-        end_label = default_end_label
-        if self.params and 'end_label' in self.params:
-            end_label = self.params['end_label']
+        end_label = (self.params or {}).get('end_label', default_end_label)
         end_label_bytes = chars2bytes(end_label)
         message_file_name_bytes = chars2bytes(self.message_file_name)
         message_file_name_bytes_len = asarray([len(message_file_name_bytes)])

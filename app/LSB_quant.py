@@ -28,15 +28,9 @@ class LSB_quant_embedding(Embedder):
 
     def embeding(self):
         # получаем параметры работы алгоритма
-        start_position = default_start_position
-        if self.params and 'start_position' in self.params:
-            start_position = self.params['start_position']
-        key = default_key
-        if self.params and 'key' in self.params:
-            key = self.params['key']
-        fill_rest: bool = default_fill_rest
-        if self.params and 'fill_rest' in self.params:
-            fill_rest = self.params['fill_rest']
+        start_position = (self.params or {}).get('start_position', default_start_position)
+        key = (self.params or {}).get('key', default_key)
+        fill_rest = (self.params or {}).get('fill_rest', default_fill_rest)
         # получаем цветовые составляющие изображения
         if self.cover_object is None: return
         cover_red = concatenate(self.cover_object[:, :, 0])
@@ -99,12 +93,8 @@ class LSB_quant_extracting(Extractor):
 
     def extracting(self):
         # получаем параметры работы алгоритма
-        start_position = default_start_position
-        if self.params and 'start_position' in self.params:
-            start_position = self.params['start_position']
-        key = default_key
-        if self.params and 'key' in self.params:
-            key = self.params['key']
+        start_position = (self.params or {}).get('start_position', default_start_position)
+        key = (self.params or {}).get('key', default_key)
         # получаем цветовые составляющие изображения
         if self.stego_object is None: return
         stego_red = concatenate(self.stego_object[:, :, 0])

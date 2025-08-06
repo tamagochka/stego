@@ -30,15 +30,9 @@ class LSB_kdb_embedding(Embedder):
 
     def embeding(self):
         # получаем параметры работы алгоритма
-        key = default_key
-        if self.params and 'key' in self.params:
-            key = self.params['key']
-        luminance = default_luminance
-        if self.params and 'luminance' in self.params:
-            luminance = self.params['luminance']
-        repeats = default_repeats
-        if self.params and 'repeats' in self.params:
-            repeats = self.params['repeats']
+        key = (self.params or {}).get('key', default_key)
+        luminance = (self.params or {}).get('luminance', default_luminance)
+        repeats = (self.params or {}).get('repeats', default_repeats)
         # инициализация генератора случайных чисел на основе ключа
         mstw = MersenneTwister(key)
         # стеганограмма - копия покрывающего объекта с измененными пикселями
@@ -86,18 +80,10 @@ class LSB_kdb_extracting(Extractor):
 
     def extracting(self):
         # получаем параметры работы алгоритма
-        key = default_key
-        if self.params and 'key' in self.params:
-            key = self.params['key']
-        sigma = default_sigma
-        if self.params and 'sigma' in self.params:
-            sigma = self.params['sigma']
-        repeats = default_repeats
-        if self.params and 'repeats' in self.params:
-            repeats = self.params['repeats']
-        end_label = default_end_label
-        if self.params and 'end_label' in self.params:
-            end_label = self.params['end_label']
+        key = (self.params or {}).get('key', default_key)
+        repeats = (self.params or {}).get('repeats', default_repeats)
+        sigma = (self.params or {}).get('sigma', default_sigma)
+        end_label = (self.params or {}).get('end_label', default_end_label)
         # резервируем место под битовую вектор-строку вложения
         if self.stego_object is None: return
         message_len = self.stego_object.shape[0] * self.stego_object.shape[1]

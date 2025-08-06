@@ -351,18 +351,10 @@ class LSB_hugo_embedding(Embedder):
 
     def embeding(self):
         # получаем параметры работы алгоритма
-        T = default_T
-        if self.params and 'T' in self.params:
-            T = self.params['T']
-        inv_sigma = default_inv_sigma
-        if self.params and 'inv_sigma' in self.params:
-            inv_sigma = self.params['inv_sigma']
-        inv_gamma = default_inv_gamma
-        if self.params and 'inv_gamma' in self.params:
-            inv_gamma = self.params['inv_gamma']
-        seed = default_seed
-        if self.params and 'seed' in self.params:
-            seed = self.params['seed']
+        T = (self.params or {}).get('T', default_T)
+        inv_sigma = (self.params or {}).get('inv_sigma', default_inv_sigma)
+        inv_gamma = (self.params or {}).get('inv_gamma', default_inv_gamma)
+        seed = (self.params or {}).get('seed', default_seed)
 
         # соединяем двумерные цветовые плоскости в один двумерный массив
         # cover_arr = hstack((cover_object))  # TODO распространить на несколько цветовых плоскостей

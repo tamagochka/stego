@@ -28,15 +28,9 @@ class LSB_PRI_embedding(Embedder):
 
     def embeding(self):
         # получаем параметры работы алгоритма
-        start_position = default_start_position
-        if self.params and 'start_position' in self.params:
-            start_position = self.params['start_position']
-        key = default_key
-        if self.params and 'key' in self.params:
-            key = self.params['key']
-        fill_rest: bool = default_fill_rest
-        if self.params and 'fill_rest' in self.params:
-            fill_rest = self.params['fill_rest']
+        start_position = (self.params or {}).get('start_position', default_start_position)
+        key = (self.params or {}).get('key', default_key)
+        fill_rest = (self.params or {}).get('fill_rest', default_fill_rest)
         # получаем цветовые составляющие изображения
         if self.cover_object is None: return
         cover_red = concatenate(self.cover_object[:, :, 0])
@@ -64,7 +58,7 @@ class LSB_PRI_embedding(Embedder):
 
         z = start_position
         for i in range(message_len):
-            b = D2B(cover_vect[z])
+            b = D2B(uint8(cover_vect[z]))
             b[0] = self.message_bits[i]
             stego_vect[z] = B2D(b)
             # определяем следующее место погружения
@@ -90,12 +84,8 @@ class LSB_PRI_extracting(Extractor):
 
     def extracting(self):
         # получаем параметры работы алгоритма
-        start_position = default_start_position
-        if self.params and 'start_position' in self.params:
-            start_position = self.params['start_position']
-        key = default_key
-        if self.params and 'key' in self.params:
-            key = self.params['key']
+        start_position = (self.params or {}).get('start_position', default_start_position)
+        key = (self.params or {}).get('key', default_key)
         # получаем цветовые составляющие изображения
         if self.stego_object is None: return
         stego_red = concatenate(self.stego_object[:, :, 0])
@@ -112,7 +102,7 @@ class LSB_PRI_extracting(Extractor):
         i = 0
         while z <= stego_len:
             # байт стеганограммы в двоичный вид
-            b = D2B(stego_vect[z])
+            b = D2B(uint8(stego_vect[z]))
             # сохраняем НЗБ стеганограммы как бит вложения
             self.message_bits[i] = b[0]
             i += 1
