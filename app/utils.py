@@ -1,7 +1,8 @@
 import sys
+from typing import Any
 
-from numpy import zeros, array, uint8, ndarray
 from numpy.typing import NDArray
+from numpy import zeros, array, uint8, uint16
 
 
 class MersenneTwister(object):
@@ -24,9 +25,9 @@ class MersenneTwister(object):
     random() -> float
         Генерирует псевдо-случайное рациональное число в диапазоне [0..1).
     randint(range_values: int | tuple[int, int]=(1 << 32)) -> int
-        Генерирует массив ndarray псевдо-случайных целых чисел заданной формы в заданном диапазоне [a..b).
-    randarrint(shape: int | tuple[int, ...], range_values: int | tuple[int, int]=(1 << 32)) -> ndarray
-        Генерирует массив ndarray псевдо-случайных целых чисел заданной формы в заданном диапазоне [a..b).
+        Генерирует массив NDArray псевдо-случайных целых чисел заданной формы в заданном диапазоне [a..b).
+    randarrint(shape: int | tuple[int, ...], range_values: int | tuple[int, int]=(1 << 32)) -> NDArray
+        Генерирует массив NDArray псевдо-случайных целых чисел заданной формы в заданном диапазоне [a..b).
     """
 
     n: int = 624
@@ -163,7 +164,7 @@ class MersenneTwister(object):
             raise NotImplementedError('To large range for 32-bit generator.')
 
 
-    def __fillarr(self, arr: ndarray, range_values: int | tuple[int, int]):
+    def __fillarr(self, arr: NDArray[Any], range_values: int | tuple[int, int]):
         if arr.ndim == 1:
             for i in range(len(arr)):
                 arr[i] = self.randint(range_values)
@@ -172,9 +173,9 @@ class MersenneTwister(object):
                 self.__fillarr(i, range_values)
 
 
-    def randarrint(self, shape: int | tuple[int, ...], range_values: int | tuple[int, int]=(1 << 32)) -> ndarray:
+    def randarrint(self, shape: int | tuple[int, ...], range_values: int | tuple[int, int]=(1 << 32)) -> NDArray[Any]:
         """
-        Генерирует массив ndarray псевдо-случайных целых чисел заданной формы в заданном диапазоне [a..b).
+        Генерирует массив NDArray псевдо-случайных целых чисел заданной формы в заданном диапазоне [a..b).
 
         Parameters
         ----------
@@ -184,7 +185,7 @@ class MersenneTwister(object):
             диапазон [a..b), если указано только один аргумент, то [0..b), если аргументов нет, то [0, 4294967296)
         Returns
         -------
-        ndarray
+        NDArray
             массив псевдо-случайных целых чисел заданной формы в заданном диапазоне
         """
 
@@ -268,7 +269,7 @@ def from_bit_vector(vector_bits: NDArray[uint8]) -> NDArray[uint8]:
 
     Parameters
     ----------
-    vector_bits: ndarray[uint8]
+    vector_bits: NDArray[uint8]
         двоичная вектор-строка
 
     Returns
@@ -326,6 +327,32 @@ def chars2bytes(vector_chars: str) -> NDArray[uint8]:
     """
     
     return array([ord(ch) for ch in list(vector_chars)], dtype=uint8)
+
+
+def key_pairs_gen(primary_key: int, count_key_pairs: int) -> NDArray[uint8]:
+    """
+    Генерация вектора пар ключей на основании первичного ключа.
+
+    Parameters
+    ----------
+    primary_key: int
+        первичный ключ
+    count_key_pairs: int
+        количество генерируемых пар ключей
+    Returns
+    -------
+    NDArray[uint8]
+        вектор-строка, содержащая count_key_pairs пар ключей
+
+    """
+
+    key_pairs = zeros(2 * count_key_pairs, dtype=uint16)
+    key_pairs[0] = primary_key
+    for i in range(1, 2 * count_key_pairs):
+        key_pairs[i] = int(str(key_pairs[i - 1] ** 2)[:3])
+        if key_pairs[i] > 255:
+            key_pairs[i] = int(str(key_pairs[i])[0:2])
+    return key_pairs.astype(uint8)
 
 
 if __name__ == '__main__':

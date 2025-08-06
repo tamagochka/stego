@@ -58,7 +58,7 @@ class App(object):
         embedding_algorithms = {
             'lsb': LSB_embedding,
             # 'pri': LSB_PRI_embedding,
-            # 'prp': LSB_PRP_embedding,
+            'prp': LSB_PRP_embedding,
             # 'block': LSB_block_embedding,
             # 'quant': LSB_quant_embedding,
             # 'kdb': LSB_kdb_embedding,
@@ -94,7 +94,7 @@ class App(object):
         extracting_algorithms = {
             'lsb': LSB_extracting,
             # 'pri': LSB_PRI_extracting,
-            # 'prp': LSB_PRP_extracting,
+            'prp': LSB_PRP_extracting,
             # 'block': LSB_block_extracting,
             # 'quant': LSB_quant_extracting,
             # 'kdb': LSB_kdb_extracting

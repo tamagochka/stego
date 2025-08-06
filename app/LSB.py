@@ -8,8 +8,8 @@ from .Embedder import Embedder
 from .Extractor import Extractor
 
 
-default_start_label: str = 'H@4@l0'
-defualt_end_label: str = 'k0HEU'
+# параметры уникальные для алгоритма
+default_fill_rest: bool = True
 
 
 class LSB_embedding(Embedder):
@@ -21,7 +21,8 @@ class LSB_embedding(Embedder):
     """
 
     def embeding(self):
-        fill_rest: bool = True
+        # получаем параметры работы алгоритма
+        fill_rest: bool = default_fill_rest
         if self.params and 'fill_rest' in self.params:
             fill_rest = self.params['fill_rest']
         # получаем цветовые составляющие изображения
