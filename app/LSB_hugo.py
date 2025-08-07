@@ -129,7 +129,7 @@ class HugoAlgSimulator(object):
     m: HugoModel
     width: uint32
     height: uint32
-    n: uint32
+    n: uint32  # общее количество пикселей в покрывающем объекте
     generator: MersenneTwister
     pixel_perm: NDArray[uint32]
     pixel_perm_inv: NDArray[uint32]
@@ -339,13 +339,22 @@ class LSB_hugo_embedding(Embedder):
     """
     Реализация алгоритма погружения в НЗБ HUGO (High Undetectable steGO)
     Получает из свойства родителя params параметр работы:
-    {'default_T': 90}
+    {'T': 90}
 
-    {'default_inv_sigma': 1}
+    {'inv_sigma': 1}
 
-    {'default_inv_gamma': 1}
+    {'inv_gamma': 1}
 
-    {'default_seed': 42}
+    {'seed': 42}
+        зерно для инициализации ГСПЧ
+    {}
+    
+        
+            
+    {'alpha'}
+        процент заполнения покрывающего объекта полезной нагрузкой (битами вложения) [0, 1]
+    {'corr-strategy'}
+
 
     """
 
@@ -359,7 +368,7 @@ class LSB_hugo_embedding(Embedder):
         # соединяем двумерные цветовые плоскости в один двумерный массив
         # cover_arr = hstack((cover_object))  # TODO распространить на несколько цветовых плоскостей
 
-        rel_payload: list[float32] = [float32(1)]
+        rel_payload: list[float32] = [float32(0.7)]
         corr_strategy: uint32 = uint32(2)
         n_changes: list[uint32] = [uint32(0)]
         distortion: list[float32] = [float32(0)]
