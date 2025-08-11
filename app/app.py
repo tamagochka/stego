@@ -10,7 +10,7 @@ from .LSB_PRP import LSB_PRP_embedding, LSB_PRP_extracting
 from .LSB_block import LSB_block_embedding, LSB_block_extracting
 from .LSB_quant import LSB_quant_embedding, LSB_quant_extracting
 from .LSB_kdb import LSB_kdb_embedding, LSB_kdb_extracting
-from .LSB_hugo import LSB_hugo_embedding
+from .LSB_hugo import LSB_hugo_embedding, LSB_hugo_extracting
 from .steganalysing import visual_attack
 
 
@@ -97,7 +97,8 @@ class App(object):
             'prp': LSB_PRP_extracting,
             'block': LSB_block_extracting,
             'quant': LSB_quant_extracting,
-            'kdb': LSB_kdb_extracting
+            'kdb': LSB_kdb_extracting,
+            'hugo': LSB_hugo_extracting
         }
         extractor = extracting_algorithms[algorithm]()
         extractor.process_one_file(stego_file_path, extract_file_path, **params if params else {})  # распаковываем параметры из словаря, если они были переданы
