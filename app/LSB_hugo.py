@@ -1,5 +1,6 @@
 import sys
 from math import sqrt, exp, log
+from abc import ABC, abstractmethod
 
 from numpy import uint8, zeros, uint32, inf, float32, copy, int16, int32, float64, finfo, roll, array_equal, int8
 from numpy.typing import NDArray
@@ -70,7 +71,7 @@ class HugoModel(object):
 
     def set_stego_noise(self, i, j, value) -> float64:
         """
-        Устанавливает значение шума НЗБ для пикселя в заданную величину и считает расчитывает искажение.
+        Устанавливает значение шума НЗБ для пикселя в заданную величину и расчитывает искажение.
         """
 
         cp = self.cover_pixel[i, j]
@@ -130,22 +131,26 @@ class HugoModel(object):
         return self.cover_pixel[i, j]
     
 
-class HugoAlgEmbeder(object):
+class HugoAlgBase(ABC):
     """
     
     """
 
     model: HugoModel | None = None
+    message_bits: NDArray[uint8] | None = None
     generator: MersenneTwister
     pixel_perm: NDArray[uint32]  # случайные перестановки пикселей
     pixel_perm_inv: NDArray[uint32]  # обратные перестановки для реализации стратегии коррекции №1
+    corr_strategy: int = default_corr_strategy
 
-
-    def __init__(self, cover: NDArray[uint8], T: uint32, inv_sigma: float32, inv_gamma: float32, key: uint32):
+    def __init__(self, cover: NDArray[uint8], message_bits: NDArray[uint8], T: uint32, inv_sigma: float32, inv_gamma: float32, key: uint32, corr_strategy: int):
         # инициализация генератора случайных чисел на основе ключа
         self.generator = MersenneTwister(int(key))
         # инициализируем модель покрывающего объекта
         self.model = HugoModel(cover, T, inv_sigma, inv_gamma)
+
+        self.message_bits = message_bits
+        self.corr_strategy = corr_strategy
 
         # генерируем перестановки
         self.pixel_perm = zeros(self.model.count_pixels, dtype=uint32)
@@ -173,18 +178,17 @@ class HugoAlgEmbeder(object):
         return stego
 
 
-    def embed_message(self, message_bits: NDArray[uint8], corr_strategy: uint32):
+    def embed_message(self):
         """
         Погружение вложения, и коррекция искажений, вызваыннх погружением.
         """
 
-        if not self.model: return
+        if not self.model or self.message_bits is None: return
         dist_plus: NDArray[float32] = zeros(self.model.count_pixels, dtype=float32)
         dist_minus: NDArray[float32] = zeros(self.model.count_pixels, dtype=float32)
         dist_min: NDArray[float64] = zeros(self.model.count_pixels, dtype=float64)
         cover: NDArray[uint8] = zeros(self.model.count_pixels, dtype=uint8)
         stego: NDArray[uint8] = zeros(self.model.count_pixels, dtype=uint8)
-        message_len = len(message_bits)
 
         # расчет начального искажения до встраивания
         for i in range(self.model.count_pixels):
@@ -207,11 +211,9 @@ class HugoAlgEmbeder(object):
             cover[i] = self.model.get_cover_pixel(x, y) % 2
 
         # погружение
-        stego = copy(cover)
-        for i in range(message_len):
-            stego[i] = message_bits[i]
+        self.binary_embed(cover, stego)
 
-        match corr_strategy:
+        match self.corr_strategy:
             case 0:  # без коррекции модели, простая аддитивная апроксимация
                 for i in range(self.model.count_pixels):
                     if cover[i] != stego[i]:
@@ -220,8 +222,19 @@ class HugoAlgEmbeder(object):
                         y = ip // self.model.height
                         if dist_plus[i] < dist_minus[i]: self.model.set_stego_noise(x, y, +1)
                         else: self.model.set_stego_noise(x, y, -1)
+            case 1:
+                for i in range(self.model.count_pixels):
+                    ip = self.pixel_perm_inv[i]
+                    if cover[ip] != stego[ip]:
+                        x = ip % self.model.height
+                        y = ip // self.model.height
+                        cp = self.model.get_cover_pixel(x, y)
+                        d_plus, d_minus = inf, inf
+                        if cp <= 254: d_plus = self.model.set_stego_noise(x, y, +1)
+                        if cp >= 1: d_minus = self.model.set_stego_noise(x, y, -1)
+                        if d_plus < d_minus: self.model.set_stego_noise(x, y, +1)
             case 1:  # стратегия коррекции начанющаяся от пикселя с максимальным искажением к пикселю с минимальным
-                v: list[tuple[uint32, float32]] = []
+                v: list[tuple[int, float]] = []
                 for i in range(self.model.count_pixels):
                     if cover[i] != stego[i]:
                         v.append((i, dist_min[i]))
@@ -236,7 +249,7 @@ class HugoAlgEmbeder(object):
                     if cp >= 1: d_minus = self.model.set_stego_noise(x, y, -1)
                     if d_plus < d_minus: self.model.set_stego_noise(x, y, +1)
             case 2:  # стратегия коррекции начанющаяся от пикселя с минимальным искажением к пикселю с максимальным
-                v: list[tuple[uint32, float32]] = []
+                v: list[tuple[int, float]] = []
                 for i in range(self.model.count_pixels):
                     if cover[i] != stego[i]:
                         v.append((i, dist_min[i]))
@@ -263,6 +276,30 @@ class HugoAlgEmbeder(object):
                         if d_plus < d_minus: self.model.set_stego_noise(x, y, +1)
             case _:
                 raise ValueError('This model correction strategy is not implemented.')
+
+
+    @abstractmethod
+    def binary_embed(self, cover: NDArray[uint8], stego: NDArray[uint8]):
+        pass
+
+
+class HugoAlgEmbeder(HugoAlgBase):
+
+    def binary_embed(self, cover: NDArray[uint8], stego: NDArray[uint8]):
+        if self.message_bits is None or self.model is None: return
+        message_len = len(self.message_bits)
+
+        for i in range(self.model.count_pixels):
+            if i < message_len:
+                stego[i] = self.message_bits[i]
+            else:
+                stego[i] = cover[i]
+
+
+
+
+
+
 
 
 class LSB_hugo_embedding(Embedder):
@@ -294,15 +331,15 @@ class LSB_hugo_embedding(Embedder):
         T = (self.params or {}).get('T', default_T)
         inv_sigma = (self.params or {}).get('inv_sigma', default_inv_sigma)
         inv_gamma = (self.params or {}).get('inv_gamma', default_inv_gamma)
-        seed = (self.params or {}).get('seed', default_seed)
+        key = (self.params or {}).get('seed', default_seed)
         corr_strategy = (self.params or {}).get('corr_strategy', default_corr_strategy)
 
         # соединяем двумерные цветовые плоскости в один двумерный массив
         # cover_arr = hstack((cover_object))  # TODO распространить на несколько цветовых плоскостей
 
         if self.cover_object is None: return
-        hugo = HugoAlgEmbeder(self.cover_object, uint32(T), float32(inv_sigma), float32(inv_gamma), uint32(seed))
-        hugo.embed_message(self.message_bits, corr_strategy=corr_strategy)
+        hugo = HugoAlgEmbeder(self.cover_object, self.message_bits, uint32(T), float32(inv_sigma), float32(inv_gamma), uint32(key), corr_strategy)
+        hugo.embed_message()
         self.stego_object = hugo.get_image()
 
 
