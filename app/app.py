@@ -47,9 +47,9 @@ class App(object):
         if not stego_file_path:
             logging.error(f'Ошибка пути к стеганограммам: \'{stego_file_path}\'')
             sys.exit()
-        if not message_file_path:
-            logging.error(f'Ошибка пути к вложениям: \'{message_file_path}\'')
-            sys.exit()
+        # if not message_file_path:
+        #     logging.error(f'Ошибка пути к вложениям: \'{message_file_path}\'')
+        #     sys.exit()
         algorithm = self.args.algorithm
         # преобразуем строку параметров в словарь
         params = None
@@ -64,9 +64,8 @@ class App(object):
             'kdb': LSB_kdb_embedding,
             'hugo': LSB_hugo_embedding
         }
-        # embedding_algorithms[algorithm](cover_file_path, stego_file_path, message_file_path, **params if params else {})  # распаковываем параметры из словаря, если они были переданы
         emedder = embedding_algorithms[algorithm]()
-        emedder.process_one_file(cover_file_path, stego_file_path, message_file_path, **params if params else {})
+        emedder.process_one_file(cover_file_path, stego_file_path, message_file_path, **params if params else {})  # распаковываем параметры из словаря, если они были переданы
 
 
     def extracting(self):

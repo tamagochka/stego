@@ -147,8 +147,9 @@ class Embedder(ABC):
 
         self.set_params(**params)
         self.load_cover_file(cover_file_path)
-        self.load_message_file(message_file_path)
-        if not self.prepare_message_object(): return
+        if message_file_path is not None:
+            self.load_message_file(message_file_path)
+            if not self.prepare_message_object(): return
         self.embeding()
         self.save_stego_file(stego_file_path)
 
