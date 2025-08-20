@@ -2,8 +2,9 @@ import sys
 from math import sqrt, exp, log
 from abc import ABC, abstractmethod
 
-from numpy import uint8, zeros, uint32, inf, float32, copy, int16, int32, float64, finfo, roll, array_equal, int8
+from numpy import uint8, zeros, uint32, inf, float32, copy, int32, float64, finfo, roll, array_equal, int8
 from numpy.typing import NDArray
+from hamming_code import encode
 
 from .utils import MersenneTwister, chars2bytes, to_bit_vector
 from .config import default_end_label
@@ -18,6 +19,53 @@ default_inv_gamma: float = 1
 default_corr_strategy: int = 2
 default_seed: int = 42
 default_rel_payload: float = 0.5
+
+
+def binary_entropyf(x: float32) -> float32:
+    LOG2 = log(2.0)
+    EPS = finfo(float32).eps
+    z = float32(0)
+    if (x < EPS) or ((1 - x) < EPS):
+        return float32(0)
+    else:
+        z = float32((-x * log(x) - (1 - x) * log(1 - x)) / LOG2)
+        return z        
+
+
+def calc_lambda_from_payload(message_length: uint32, weigts: NDArray[float64], n: uint32) -> float32:
+    
+    l1 = float32(0)
+    l2 = float32(0)
+    l3 = float32(1000.0)
+    m1 = float32(n)
+    m2 = float32(0)
+    m3: float32 = float32(message_length + 1)
+    j = int32(0)
+    iterations = uint32(0)
+
+    while m3 > message_length:
+        l3 *= 2
+        m3 = float32(0)
+        for i in range(n):
+            m3 += binary_entropyf(float32(1 / (1 + exp(-l3 * weigts[i]))))
+        j += 1
+        if j > 10:
+            return l3
+        iterations += 1
+    alpha: float32 = message_length / n
+    while ((m1 - m3) / n > alpha / 1000.0) and (iterations < 30):
+        l2 = l1 + (l3 - l1) / 2
+        m2 = float32(0)
+        for i in range(n):
+            m2 += binary_entropyf(float32(1 / (1 + exp(-l2 * weigts[i]))))
+        if m2 < message_length:
+            l3 = l2
+            m3 = m2
+        else:
+            l1 = l2
+            m1 = m2
+        iterations += 1
+    return l2
 
 
 class HugoModel(object):
@@ -126,11 +174,12 @@ class HugoModel(object):
 
     def get_cover_pixel(self, i: uint32, j: uint32) -> uint8:
         """
-        Получить значение пикселя стеганограммы.
+        Получить значение пикселя покрывающего объекта.
         """
 
         return self.cover_pixel[i, j]
     
+
 
 class HugoAlgBase(ABC):
     """
@@ -144,9 +193,9 @@ class HugoAlgBase(ABC):
     corr_strategy: int = default_corr_strategy
     dist_min: NDArray[float64]
 
-    def __init__(self, cover: NDArray[uint8], T: uint32, inv_sigma: float32, inv_gamma: float32, key: uint32, corr_strategy: int):
+    def __init__(self, cover: NDArray[uint8], T: uint32, inv_sigma: float32, inv_gamma: float32, seed: uint32, corr_strategy: int):
         # инициализация генератора случайных чисел на основе ключа
-        self.generator = MersenneTwister(int(key))
+        self.generator = MersenneTwister(int(seed))
         # инициализируем модель покрывающего объекта
         self.model = HugoModel(cover, T, inv_sigma, inv_gamma)
 
@@ -283,57 +332,32 @@ class HugoAlgBase(ABC):
         pass
 
 
+
+class HugoAlgEmbeder(HugoAlgBase):
+
+    message_bits: NDArray[uint8] | None = None
+
+
+    def __init__(self, cover: NDArray[uint8], message_bits: NDArray[uint8], T: uint32, inv_sigma: float32, inv_gamma: float32, seed: uint32, corr_strategy: int):
+        super().__init__(cover, T, inv_sigma, inv_gamma, seed, corr_strategy)
+        self.message_bits = message_bits
+
+
+    def binary_embed(self, cover: NDArray[uint8], stego: NDArray[uint8]):
+        if self.message_bits is None or self.model is None: return
+        message_len = len(self.message_bits)
+        for i in range(self.model.count_pixels):
+            if i < message_len:
+                stego[i] = self.message_bits[i]
+            else:
+                stego[i] = cover[i]
+
+
+
 class HugoAlgProbability(HugoAlgBase):
 
-    def __init__(self, cover: NDArray[uint8], T: uint32, inv_sigma: float32, inv_gamma: float32, key: uint32, corr_strategy: int):
-        super().__init__(cover, T, inv_sigma, inv_gamma, key, corr_strategy)
-
-
-    def calc_lambda_from_payload(self, message_length: uint32, weigts: NDArray[float64], n: uint32) -> float32:
-        
-        l1 = float32(0)
-        l2 = float32(0)
-        l3 = float32(1000.0)
-        m1 = float32(n)
-        m2 = float32(0)
-        m3: float32 = float32(message_length + 1)
-        j = int32(0)
-        iterations = uint32(0)
-
-        while m3 > message_length:
-            l3 *= 2
-            m3 = float32(0)
-            for i in range(n):
-                m3 += self.binary_entropyf(float32(1 / (1 + exp(-l3 * weigts[i]))))
-            j += 1
-            if j > 10:
-                return l3
-            iterations += 1
-        alpha: float32 = message_length / n
-        while ((m1 - m3) / n > alpha / 1000.0) and (iterations < 30):
-            l2 = l1 + (l3 - l1) / 2
-            m2 = float32(0)
-            for i in range(n):
-                m2 += self.binary_entropyf(float32(1 / (1 + exp(-l2 * weigts[i]))))
-            if m2 < message_length:
-                l3 = l2
-                m3 = m2
-            else:
-                l1 = l2
-                m1 = m2
-            iterations += 1
-        return l2
-
-
-    def binary_entropyf(self, x: float32) -> float32:
-        LOG2 = log(2.0)
-        EPS = finfo(float32).eps
-        z = float32(0)
-        if (x < EPS) or ((1 - x) < EPS):
-            return float32(0)
-        else:
-            z = float32((-x * log(x) - (1 - x) * log(1 - x)) / LOG2)
-            return z        
+    def __init__(self, cover: NDArray[uint8], T: uint32, inv_sigma: float32, inv_gamma: float32, seed: uint32, corr_strategy: int):
+        super().__init__(cover, T, inv_sigma, inv_gamma, seed, corr_strategy)
 
 
     @abstractmethod
@@ -342,13 +366,14 @@ class HugoAlgProbability(HugoAlgBase):
         pass
 
 
+
 class HugoAlgSimulator(HugoAlgProbability):
 
     rel_payload: float32 = float32(0)
 
 
-    def __init__(self, cover: NDArray[uint8], rel_payload: float32, T: uint32, inv_sigma: float32, inv_gamma: float32, key: uint32, corr_strategy: int):
-        super().__init__(cover, T, inv_sigma, inv_gamma, key, corr_strategy)
+    def __init__(self, cover: NDArray[uint8], rel_payload: float32, T: uint32, inv_sigma: float32, inv_gamma: float32, seed: uint32, corr_strategy: int):
+        super().__init__(cover, T, inv_sigma, inv_gamma, seed, corr_strategy)
         self.rel_payload = rel_payload
 
 
@@ -356,32 +381,171 @@ class HugoAlgSimulator(HugoAlgProbability):
         if self.model is None: return
         weights = self.dist_min
         message_len = uint32(self.rel_payload * self.model.count_pixels)
-        lmbd: float32 = self.calc_lambda_from_payload(message_len, weights, self.model.count_pixels)
+        lmbd: float32 = calc_lambda_from_payload(message_len, weights, self.model.count_pixels)
         for i in range(self.model.count_pixels):
             flip_prob = exp(-lmbd * weights[i]) / (1 + exp(-lmbd * weights[i]))
             # иммитация замены бита плоскости НЗБ на бит вложения
             stego[i] = cover[i] ^ 1 if self.generator.random() < flip_prob else cover[i]
 
 
-class HugoAlgEmbeder(HugoAlgBase):
+
+class HugoAlgProbabilityEmbeder(HugoAlgProbability):
 
     message_bits: NDArray[uint8] | None = None
+    extraction_key: list[int] = []
 
 
-    def __init__(self, cover: NDArray[uint8], message_bits: NDArray[uint8], T: uint32, inv_sigma: float32, inv_gamma: float32, key: uint32, corr_strategy: int):
-        super().__init__(cover, T, inv_sigma, inv_gamma, key, corr_strategy)
+    def __init__(self, cover: NDArray[uint8], message_bits: NDArray[uint8], T: uint32, inv_sigma: float32, inv_gamma: float32, seed: uint32, corr_strategy: int):
+        super().__init__(cover, T, inv_sigma, inv_gamma, seed, corr_strategy)
         self.message_bits = message_bits
 
 
     def binary_embed(self, cover: NDArray[uint8], stego: NDArray[uint8]):
         if self.message_bits is None or self.model is None: return
-        message_len = len(self.message_bits)
+
+        hamming_message
+        tmp = zeros(32, dtype=uint8)
+        for i in range(len(self.message_bits)):
+            tmp[i % 8] = self.message_bits[i]
+            if not (i + 1) % 8:
+                val = 0
+                for b in tmp:
+                    val = (val << 1) | b
+                code = encode(int(val))
+                
+
+                
+
+        # print()
+
+
+
+        weights = self.dist_min
+        message_len = uint32(len(self.message_bits))
+        lmbd: float32 = calc_lambda_from_payload(message_len, weights, self.model.count_pixels)
+
+        F = open('embeding.txt', 'w')
+        n = 0
+        for i in range(self.model.count_pixels):
+            if n < message_len:
+                r = self.generator.random()
+                flip_prob = exp(-lmbd * weights[i]) / (1 + exp(-lmbd * weights[i]))
+
+                F.write(f'{r}')
+
+                if self.message_bits[n] != cover[i]:
+
+                    if r < flip_prob:
+                        F.write(f' < ')
+                        F.write(f'{flip_prob} - bit\n')
+
+                        stego[i] = cover[i] ^ 1
+                        n += 1
+                    else:
+                        F.write(f' > ')
+                        F.write(f'{flip_prob}\n')
+
+                        stego[i] = cover[i]
+                else:
+                    self.extraction_key.append(i)  # список пикселей, в которых бит вложения совпадает с битом покрывающего объекта
+                    stego[i] = cover[i]
+                    n += 1
+                    
+
+                    F.write(f' - {flip_prob}\n')
+
+
+        
+        # F.write(str(self.message_bits))
+
+        F.close()
+
+class HugoAlgProbabilityExtractor(object):
+
+    extraction_key: list[int] | None = None
+    generator: MersenneTwister
+    model: HugoModel | None = None
+
+
+    def __init__(self, stego: NDArray[uint8], extraction_key: list[int], T: uint32, inv_sigma: float32, inv_gamma: float32, seed: uint32):
+        # инициализация генератора случайных чисел на основе ключа
+        self.generator = MersenneTwister(int(seed))
+        # инициализируем модель стеганограммы
+        self.model = HugoModel(stego, T, inv_sigma, inv_gamma)
+        self.extraction_key = extraction_key
+
+
+    def binary_extract(self) -> NDArray[uint8] | None:
+        if not self.model or self.extraction_key is None: return None
+        # резервируем место под битовую вектор-строку вложения
+        message_bits = zeros(self.model.count_pixels, dtype=uint8)
+        dist_min: NDArray[float64] = zeros(self.model.count_pixels, dtype=float64)
+        dist_plus: NDArray[float32] = zeros(self.model.count_pixels, dtype=float32)
+        dist_minus: NDArray[float32] = zeros(self.model.count_pixels, dtype=float32)
+        stego: NDArray[uint8] = zeros(self.model.count_pixels, dtype=uint8)
+
+        # генерируем перестановки
+        pixel_perm = zeros(self.model.count_pixels, dtype=uint32)
+        for i in range(self.model.count_pixels):
+            pixel_perm[i] = i
+        for i in range(self.model.count_pixels):
+            j = self.generator.randint() % (self.model.count_pixels - i)
+            pixel_perm[i + j], pixel_perm[i] = pixel_perm[i], pixel_perm[i + j]
+
+        # расчет начального искажения
+        for i in range(self.model.count_pixels):
+            ip = pixel_perm[i]
+            x = ip % self.model.height
+            y = ip // self.model.height
+            cp = self.model.get_cover_pixel(x, y)
+            if cp <= 254:
+                dist_plus[i] = self.model.set_stego_noise(x, y, +1)
+            else:
+                dist_plus[i] = inf
+            if cp >= 1:
+                dist_minus[i] = self.model.set_stego_noise(x, y, -1)
+            else:
+                dist_minus[i] = inf
+            assert (dist_plus[i] != inf) or (dist_minus[i] != inf)
+            self.model.set_stego_noise(x, y, 0)
+            dist_min[i] = dist_plus[i] if dist_plus[i] < dist_minus[i] else dist_minus[i]
+            # отсекаем плоскость НЗБ, в cover теперь лежат биты НЗБ
+            stego[i] = self.model.get_cover_pixel(x, y) % 2
+
+        weights = dist_min
+
+        message_len = uint32(7792) # TODO !!!
+
+        lmbd: float32 = calc_lambda_from_payload(message_len, dist_min, self.model.count_pixels)
+        n = 0
+
+        F = open('extracting.txt', 'w')
 
         for i in range(self.model.count_pixels):
-            if i < message_len:
-                stego[i] = self.message_bits[i]
+            r = self.generator.random()
+            flip_prob = exp(-lmbd * weights[i]) / (1 + exp(-lmbd * weights[i]))
+
+            F.write(f'{r}')
+
+            if i in self.extraction_key:
+                message_bits[n] = stego[i]
+                n += 1
+                F.write(f' - {flip_prob}\n')
             else:
-                stego[i] = cover[i]
+                if r < flip_prob:
+                    F.write(f' < {flip_prob} - bit\n')
+                    message_bits[n] = stego[i]
+                    n += 1
+                else:
+                    F.write(f' > {flip_prob}\n')
+
+
+
+        F.close()
+        
+        
+        return message_bits
+
 
 
 class LSB_hugo_embedding(Embedder):
@@ -408,12 +572,11 @@ class LSB_hugo_embedding(Embedder):
     """
 
     def embeding(self):
-        # if self.message_bits is None: return
         # получаем параметры работы алгоритма
         T = (self.params or {}).get('T', default_T)
         inv_sigma = (self.params or {}).get('inv_sigma', default_inv_sigma)
         inv_gamma = (self.params or {}).get('inv_gamma', default_inv_gamma)
-        key = (self.params or {}).get('seed', default_seed)
+        seed = (self.params or {}).get('seed', default_seed)
         corr_strategy = (self.params or {}).get('corr_strategy', default_corr_strategy)
         rel_payload = (self.params or {}).get('rel_payload', default_rel_payload)
 
@@ -422,11 +585,19 @@ class LSB_hugo_embedding(Embedder):
         # cover_arr = hstack((cover_object))  # TODO распространить на несколько цветовых плоскостей
 
         if self.cover_object is None: return
-        # hugo = HugoAlgEmbeder(self.cover_object, self.message_bits, uint32(T), float32(inv_sigma), float32(inv_gamma), uint32(key), corr_strategy)
-        hugo = HugoAlgSimulator(self.cover_object, float32(rel_payload), uint32(T), float32(inv_sigma), float32(inv_gamma), uint32(key), corr_strategy)
+        # hugo = HugoAlgSimulator(self.cover_object, float32(rel_payload), uint32(T), float32(inv_sigma), float32(inv_gamma), uint32(seed), corr_strategy)
+
+        if self.message_bits is None: return
+        # hugo = HugoAlgEmbeder(self.cover_object, self.message_bits, uint32(T), float32(inv_sigma), float32(inv_gamma), uint32(seed), corr_strategy)
+        hugo = HugoAlgProbabilityEmbeder(self.cover_object, self.message_bits, uint32(T), float32(inv_sigma), float32(inv_gamma), uint32(seed), corr_strategy)
+
 
         hugo.embed_message()
+
+        print(hugo.extraction_key)
+
         self.stego_object = hugo.get_image()
+
 
 
 class LSB_hugo_extracting(Extractor):
@@ -436,44 +607,59 @@ class LSB_hugo_extracting(Extractor):
         # получаем параметры работы алгоритма
         seed = (self.params or {}).get('seed', default_seed)
         end_label = (self.params or {}).get('end_label', default_end_label)
+        probability = (self.params or {}).get('probability', False)
+        extraction_key_file = (self.params or {}).get('extraction_key_file', None)
+        T = (self.params or {}).get('T', default_T)
+        inv_sigma = (self.params or {}).get('inv_sigma', default_inv_sigma)
+        inv_gamma = (self.params or {}).get('inv_gamma', default_inv_gamma)
 
-        # инициализация генератора случайных чисел на основе зерна
-        mstw = MersenneTwister(seed)
-        # резервируем место под битовую вектор-строку вложения
-        H, W = self.stego_object.shape
-        message_len = W * H
-        self.message_bits = zeros(message_len, dtype=uint8)
+        if probability:
+            if not extraction_key_file: return
+            with open(extraction_key_file, 'r') as F:
+                extraction_key = F.readline()
+            extraction_key = [int(item) for item in extraction_key.split(',')]
+            hugo_extractor = HugoAlgProbabilityExtractor(self.stego_object, extraction_key, T, inv_sigma, inv_gamma, seed)
+            self.message_bits = hugo_extractor.binary_extract()
 
-        # переводим метку конца места погружения в биты
-        end_label_bytes = chars2bytes(end_label)
-        end_label_bits = to_bit_vector(end_label_bytes)
-        end_label_bits_len = len(end_label_bits)
-        # буффер в который будут помещаться последние извлеченные биты
-        # для проверки их на совпадение с меткой конца места погружения
-        check_end_label_bits = zeros(end_label_bits_len, dtype=int)
 
-        # генерируем перестановки
-        pixel_perm = zeros(message_len, dtype=uint32)
-        for i in range(message_len):
-            pixel_perm[i] = i
-        for i in range(message_len):
-            j = mstw.randint() % (message_len - i)
-            pixel_perm[i + j], pixel_perm[i] = pixel_perm[i], pixel_perm[i + j]
+        else:
+            # инициализация генератора случайных чисел на основе зерна
+            mstw = MersenneTwister(seed)
+            # резервируем место под битовую вектор-строку вложения
+            H, W = self.stego_object.shape
+            message_len = W * H
+            self.message_bits = zeros(message_len, dtype=uint8)
 
-        # извлечение
-        for i in range(message_len):
-            ip = pixel_perm[i]
-            y = ip % H
-            x = ip // H
-            self.message_bits[i] = self.stego_object[y, x] % 2
+            # переводим метку конца места погружения в биты
+            end_label_bytes = chars2bytes(end_label)
+            end_label_bits = to_bit_vector(end_label_bytes)
+            end_label_bits_len = len(end_label_bits)
+            # буффер в который будут помещаться последние извлеченные биты
+            # для проверки их на совпадение с меткой конца места погружения
+            check_end_label_bits = zeros(end_label_bits_len, dtype=int)
 
-            # сдвигаем биты в буффере влево
-            check_end_label_bits = roll(check_end_label_bits, -1)
-            # добавляем последний извлеченный бит в конец буффера
-            check_end_label_bits[end_label_bits_len - 1] = self.message_bits[i]
-            # сравниваем буффер с битами метки, если нашли метку, прекращаем извлечение
-            if array_equal(check_end_label_bits, end_label_bits):
-                break
+            # генерируем перестановки
+            pixel_perm = zeros(message_len, dtype=uint32)
+            for i in range(message_len):
+                pixel_perm[i] = i
+            for i in range(message_len):
+                j = mstw.randint() % (message_len - i)
+                pixel_perm[i + j], pixel_perm[i] = pixel_perm[i], pixel_perm[i + j]
+
+            # извлечение
+            for i in range(message_len):
+                ip = pixel_perm[i]
+                y = ip % H
+                x = ip // H
+                self.message_bits[i] = self.stego_object[y, x] % 2
+
+                # сдвигаем биты в буффере влево
+                check_end_label_bits = roll(check_end_label_bits, -1)
+                # добавляем последний извлеченный бит в конец буффера
+                check_end_label_bits[end_label_bits_len - 1] = self.message_bits[i]
+                # сравниваем буффер с битами метки, если нашли метку, прекращаем извлечение
+                if array_equal(check_end_label_bits, end_label_bits):
+                    break
 
 
 if __name__ == '__main__':
