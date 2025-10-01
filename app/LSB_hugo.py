@@ -216,7 +216,7 @@ class HugoAlgBase(ABC):
 
     def get_image(self) -> NDArray[uint8] | None:
         """
-        Получить изображение со погруженным в него вложением.
+        Получить изображение с погруженным в него вложением.
         """
 
         if not self.model: return None

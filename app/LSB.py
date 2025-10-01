@@ -1,9 +1,9 @@
 import sys
 from random import random
 
-from numpy import uint8, copy, zeros, concatenate, array_split, dstack
+from numpy import uint8, copy, zeros
 
-from .utils import D2B, B2D
+from .utils import D2B, B2D, img_arr_to_vect, img_vect_to_arr
 from .Embedder import Embedder
 from .Extractor import Extractor
 
@@ -23,15 +23,10 @@ class LSB_embedding(Embedder):
     def embeding(self):
         # получаем параметры работы алгоритма
         fill_rest = (self.params or {}).get('fill_rest', default_fill_rest)
-        # получаем цветовые составляющие изображения
-        if self.cover_object is None: return
-        cover_red = concatenate(self.cover_object[:, :, 0])
-        cover_green = concatenate(self.cover_object[:, :, 1])
-        cover_blue = concatenate(self.cover_object[:, :, 2])
-        # собираем все цветовые составляющие в одну вектор-строку байт
-        cover_vect = concatenate([cover_red, cover_green, cover_blue])
-        count_lines = len(self.cover_object[:, :, 0])
-        cover_len = len(cover_vect)
+        # получаем покрывающий объект в виде вектор-строки байт
+        cover_vect, cover_len, count_lines, count_dim = img_arr_to_vect(self.cover_object)
+        if count_lines == 0 or cover_vect is None: return
+
         # стеганограмма - копия покрывающего объекта с измененными НЗБ
         stego_vect = copy(cover_vect)
 
@@ -55,11 +50,7 @@ class LSB_embedding(Embedder):
                 stego_vect[i] = B2D(b)
 
         # собираем изображение обратно
-        stego_red, stego_green, stego_blue = array_split(stego_vect, 3)
-        stego_red = array_split(stego_red, count_lines)
-        stego_green = array_split(stego_green, count_lines)
-        stego_blue = array_split(stego_blue, count_lines)
-        self.stego_object = dstack((stego_red, stego_green, stego_blue))
+        self.stego_object = img_vect_to_arr(stego_vect, count_lines, count_dim)
 
         # сравнение попиксельно покрывающего объекта и стеганограммы
         # for i in range(len(cover_object)):
@@ -82,18 +73,11 @@ class LSB_extracting(Extractor):
     """
 
     def extracting(self):
-        # получаем цветовые составляющие изображения
-        if self.stego_object is None: return
-        stego_red = concatenate(self.stego_object[:, :, 0])
-        stego_green = concatenate(self.stego_object[:, :, 1])
-        stego_blue = concatenate(self.stego_object[:, :, 2])
-        # собираем все цветовые составляющие в одну вектор-строку байт
-        stego_vect = concatenate([stego_red, stego_green, stego_blue])
-
-        stego_len = len(stego_vect)
+        # получаем стеганограмму в виде вектор-строки байт
+        stego_vect, stego_len = img_arr_to_vect(self.stego_object)[0:2]
+        if stego_vect is None: return
         # резервируем место под вложение
         self.message_bits = zeros(stego_len, dtype=uint8)
-
         for i in range(stego_len):
             # байт стеганограммы в двоичный вид
             b = D2B(stego_vect[i])

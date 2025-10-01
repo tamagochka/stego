@@ -44,19 +44,19 @@ class LSB_kdb_embedding(Embedder):
         message_len = len(self.message_bits)
 
         for i in range(message_len):
-            for j in range(repeats):
+            for _ in range(repeats):
                 # генерируем координаты пикселя в который будет производиться погружение
                 Cx = mstw.randint((4, self.cover_object.shape[0] - 4))
                 Cy = mstw.randint((4, self.cover_object.shape[1] - 4))
                 # рассчитываем яркость пикселя
-                Y = (0.298 * self.cover_object[Cx, Cy, 0]) + \
+                y = (0.298 * self.cover_object[Cx, Cy, 0]) + \
                     (0.586 * self.cover_object[Cx, Cy, 1]) + \
                     (0.114 * self.cover_object[Cx, Cy, 2])
-                if math.isclose(Y, 0):
-                    Y = 5 / luminance
+                if math.isclose(y, 0):
+                    y = 5 / luminance
                 # если бит вложения равен 1, то прибавляем яркость, иначе вычитаем
-                Y = Y if self.message_bits[i] else -Y
-                b = self.cover_object[Cx, Cy, 2] + Y * luminance
+                y = y if self.message_bits[i] else -y
+                b = self.cover_object[Cx, Cy, 2] + y * luminance
                 # если вылезли за пределы допустимых значений
                 b = 255 if b > 255 else b
                 b = 0 if b < 0 else b
@@ -101,7 +101,7 @@ class LSB_kdb_extracting(Extractor):
         # извлечение
         for i in range(message_len):
             s = 0
-            for j in range(repeats):
+            for _ in range(repeats):
                 # генерируем координаты пикселя из которого будем извлекать бит вложения
                 Cx = mstw.randint((4, self.stego_object.shape[0] - 4))
                 Cy = mstw.randint((4, self.stego_object.shape[1] - 4))

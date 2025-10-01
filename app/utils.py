@@ -2,7 +2,7 @@ import sys
 from typing import Any
 
 from numpy.typing import NDArray
-from numpy import zeros, array, uint8, uint16
+from numpy import zeros, array, uint8, uint16, concatenate, array_split, dstack
 
 
 class MersenneTwister(object):
@@ -379,6 +379,79 @@ def step(byte: NDArray[uint8], scale: int) -> int:
         count_bits += byte[i]
     count_bits = 1 if count_bits == 0 else count_bits
     return int(count_bits * scale)
+
+
+def img_arr_to_vect(img_arr: NDArray[uint8] | None) -> tuple[NDArray[uint8] | None, int, int, int]:
+    """
+    Преобразование массива, содержащего значения цветовых компонент (для цветного)
+    или яркости (для монохромного) для каждого пикселя изображения, в вектор-строку байт.
+
+    Parameters
+    ----------
+    img_arr : NDArray[uint8] | None
+        массив, содержащий значения цветовых компонент или яркости для каждого пикселя изображения
+    Returns
+    -------
+    tuple[NDArray[uint8] | None, int, int]
+        img_vect : NDArray[uint8] | None
+            вектор-строка байт, полученная из входного массива
+        cover_len : int
+            длина вектор-строки байт
+        count_lines : int
+            количество строк, которые были в исходном массиве
+        count_dim : int
+            количество измерений (2 - монохромное изображение, 3 - цветное изображение)
+    """
+
+    if img_arr is None: return None, 0, 0, 0
+    count_lines = 0
+    count_dim = len(img_arr.shape)
+    if count_dim == 3:
+        # получаем цветовые составляющие изображения
+        comp_red = concatenate(img_arr[:, :, 0])
+        comp_green = concatenate(img_arr[:, :, 1])
+        comp_blue = concatenate(img_arr[:, :, 2])
+        # собираем все цветовые составляющие в одну вектор-строку байт
+        img_vect = concatenate([comp_red, comp_green, comp_blue])
+        count_lines = len(img_arr[:, :, 0])
+    elif count_dim == 2:
+        # монохромное изображение
+        img_vect = concatenate(img_arr)
+        count_lines = len(img_arr[:, 0])
+    else:
+        return None, 0, 0, 0
+    return img_vect, len(img_vect), count_lines, count_dim
+
+
+def img_vect_to_arr(img_vect: NDArray[uint8], count_lines: int, count_dim: int) -> NDArray[uint8] | None:
+    """
+    Восстановление массива, содержащего значения цветовых компонент (для цветного)
+    или яркости (для монохромного) для каждого пикселя изображения,
+    из вектор-строки байт.
+
+    Parameters
+    ----------
+    img_vect : NDArray[uint8]
+        вектор-строка байт
+    count_lines : int
+        количество строк, которые были в исходном массиве
+    Returns
+    -------
+    NDArray[uint8]
+        восстановленный массив
+    """
+
+    img_arr = None
+    if count_dim == 3:
+        comp_red, comp_green, comp_blue = array_split(img_vect, 3)
+        comp_red = array_split(comp_red, count_lines)
+        comp_green = array_split(comp_green, count_lines)
+        comp_blue = array_split(comp_blue, count_lines)
+        img_arr = dstack((comp_red, comp_green, comp_blue))
+    elif count_dim == 2:
+        img_arr = array(array_split(img_vect, count_lines))
+    
+    return img_arr
 
 
 if __name__ == '__main__':

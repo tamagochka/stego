@@ -126,7 +126,7 @@ class Embedder(ABC):
                 F.save(stego_file_path)
 
 
-    def process_one_file(self, cover_file_path: str, stego_file_path: str, message_file_path: str, **params: dict[str, Any]):
+    def process_one_file(self, cover_file_path: str, stego_file_path: str, message_file_path: str | None, **params: dict[str, Any]):
         """
         Погрузить одно вложение в один файл.
 
