@@ -14,7 +14,7 @@ default_fill_rest: bool = True
 
 class LSB_embedding(Embedder):
     """
-    Реализация алгоритма погружения в НЗБ вложения с использованием непрерывного замещения бит.
+    Реализация алгоритма погружения в НЗБ вложения с использованием непрерывного замещения бит (lsb).
     Получает из свойства родителя params параметр работы:
     {'fill_rest': True}
         заполнять незаполненную часть покрывающего объекта случайными битами или нет
@@ -23,6 +23,7 @@ class LSB_embedding(Embedder):
     def embeding(self):
         # получаем параметры работы алгоритма
         fill_rest = (self.params or {}).get('fill_rest', default_fill_rest)
+
         # получаем покрывающий объект в виде вектор-строки байт
         cover_vect, cover_len, count_lines, count_dim = img_arr_to_vect(self.cover_object)
         if count_lines == 0 or cover_vect is None: return
@@ -33,7 +34,6 @@ class LSB_embedding(Embedder):
         # погружение
         if self.message_bits is None: return
         message_len = len(self.message_bits)
-
         for i in range(message_len):
             # преобразуем байт покрывающего объекта в двоичный вид
             b = D2B(cover_vect[i])
@@ -69,15 +69,18 @@ class LSB_embedding(Embedder):
 
 class LSB_extracting(Extractor):
     """
-    Реализация алгоритма извлечения из НЗБ вложения, погруженного с использованием непрерывного замещения бит.
+    lsb
+    Реализация алгоритма извлечения из НЗБ вложения, погруженного с использованием непрерывного замещения бит (lsb).
     """
 
     def extracting(self):
         # получаем стеганограмму в виде вектор-строки байт
         stego_vect, stego_len = img_arr_to_vect(self.stego_object)[0:2]
         if stego_vect is None: return
+
         # резервируем место под вложение
         self.message_bits = zeros(stego_len, dtype=uint8)
+        
         for i in range(stego_len):
             # байт стеганограммы в двоичный вид
             b = D2B(stego_vect[i])

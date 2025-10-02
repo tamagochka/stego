@@ -2,26 +2,26 @@ import sys
 from math import floor, ceil
 from random import randrange
 
-from numpy import uint8, hstack, copy, dstack, zeros
+from numpy import uint8, copy, zeros
 
-from .utils import D2B
+from .utils import D2B, img_arr_surfs_to_one_arr, one_arr_to_img_arr_surfs
 from .Embedder import Embedder
 from .Extractor import Extractor
 
 
 class LSB_block_embedding(Embedder):
     """
-    Реализация алгоритма погружения в НЗБ вложения с использованием блочного погружения для большей стойкости к изменениям покрывающего объекта.
+    Реализация алгоритма погружения в НЗБ вложения с использованием блочного погружения для большей стойкости к изменениям покрывающего объекта (block).
     """
 
     def embeding(self):
         # получаем цветовые составляющие изображения
         if self.cover_object is None: return
-        cover_red = self.cover_object[:, :, 0]
-        cover_green = self.cover_object[:, :, 1]
-        cover_blue = self.cover_object[:, :, 2]
+
         # соединяем двумерные цветовые плоскости в один двумерный массив
-        cover_arr = hstack((cover_red, cover_green, cover_blue))
+        cover_arr, *widths = img_arr_surfs_to_one_arr(self.cover_object)
+        if cover_arr is None: return
+
         # стеганограмма - копия покрывающего объекта с измененными НЗБ
         stego_arr = copy(cover_arr)
         # размеры массива
@@ -60,26 +60,19 @@ class LSB_block_embedding(Embedder):
 
         stego_arr[stego_arr.shape[0] - 1, stego_arr.shape[1] - 1] = bit_per_line
 
-        # собираем обратно изображение из цветовых составляющих
-        stego_red = stego_arr[:, :cover_blue.shape[1]]
-        stego_green = stego_arr[:, cover_blue.shape[1]: cover_blue.shape[1] + cover_green.shape[1]]
-        stego_blue = stego_arr[:, cover_blue.shape[1] + cover_green.shape[1]: cover_blue.shape[1] + cover_green.shape[1] + cover_red.shape[1]]
-        self.stego_object = dstack((stego_red, stego_green, stego_blue))
+        # собираем изображение обратно
+        self.stego_object = one_arr_to_img_arr_surfs(stego_arr, *widths)
 
 
 class LSB_block_extracting(Extractor):
     """
-    Реализация алгоритма извлечения из НЗБ вложения, погруженного с использованием блочного погружения.
+    Реализация алгоритма извлечения из НЗБ вложения, погруженного с использованием блочного погружения (block).
     """
     
     def extracting(self):
-        # получаем цветовые составляющие изображения
-        if self.stego_object is None: return
-        stego_red = self.stego_object[:, :, 0]
-        stego_green = self.stego_object[:, :, 1]
-        stego_blue = self.stego_object[:, :, 2]
         # соединяем двумерные цветовые плоскости в один двумерный массив
-        stego_arr = hstack((stego_red, stego_green, stego_blue))
+        stego_arr = img_arr_surfs_to_one_arr(self.stego_object)[0]
+        if stego_arr is None: return
 
         # размеры массива
         X, Y = stego_arr.shape

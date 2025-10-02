@@ -1,9 +1,9 @@
 import sys
 from random import random
 
-from numpy import uint8, concatenate, copy, array_split, dstack, zeros
+from numpy import uint8, copy, zeros
 
-from .utils import D2B, B2D, step
+from .utils import D2B, B2D, step, img_arr_to_vect, img_vect_to_arr
 from .Embedder import Embedder
 from .Extractor import Extractor
 
@@ -11,12 +11,12 @@ from .Extractor import Extractor
 # значения по умолчанию параметров уникальных для алгоритма
 default_start_position: int = 42
 default_key: int = 3
-default_fill_rest: bool = False  # !!!!!
+default_fill_rest: bool = True
 
 
 class LSB_quant_embedding(Embedder):
     """
-    Реализация алгоритма погружения в НЗБ вложения методом квантования.
+    Реализация алгоритма погружения в НЗБ вложения методом квантования (quant).
     Получает из свойства родителя params параметр работы:
     {'start_position': 42}
         место начала погружения
@@ -31,26 +31,22 @@ class LSB_quant_embedding(Embedder):
         start_position = (self.params or {}).get('start_position', default_start_position)
         key = (self.params or {}).get('key', default_key)
         fill_rest = (self.params or {}).get('fill_rest', default_fill_rest)
+
         # получаем цветовые составляющие изображения
-        if self.cover_object is None: return
-        cover_red = concatenate(self.cover_object[:, :, 0])
-        cover_green = concatenate(self.cover_object[:, :, 1])
-        cover_blue = concatenate(self.cover_object[:, :, 2])
-        # собираем все цветовые составляющие в одну вектор-строку байт
-        cover_vect = concatenate([cover_red, cover_green, cover_blue])
-        count_lines = len(self.cover_object[:, :, 0])
-        cover_len = len(cover_vect)
+        cover_vect, cover_len, count_lines, count_dim = img_arr_to_vect(self.cover_object)
+        if count_lines == 0 or cover_vect is None: return
+
         # стеганограмма - копия покрывающего объекта с измененными НЗБ
         stego_vect = copy(cover_vect)
 
         # заполняем покрывающий объект случайными битами, чтобы скрыть место размещения вложоения
         if fill_rest:
-            z = uint8(1)
+            z = 1
             while z <= cover_len:
                 b = D2B(cover_vect[z])
                 b[0] = round(random())
                 stego_vect[z] = B2D(b)
-                z += step(D2B(z), key)
+                z += step(D2B(uint8(z & 0xFF)), key)
 
         # погружение
         if self.message_bits is None: return
@@ -74,16 +70,12 @@ class LSB_quant_embedding(Embedder):
             z += step(D2B(uint8(z & 0xFF)), key)
 
         # собираем изображение обратно
-        stego_red, stego_green, stego_blue = array_split(stego_vect, 3)
-        stego_red = array_split(stego_red, count_lines)
-        stego_green = array_split(stego_green, count_lines)
-        stego_blue = array_split(stego_blue, count_lines)
-        self.stego_object = dstack((stego_red, stego_green, stego_blue))
+        self.stego_object = img_vect_to_arr(stego_vect, count_lines, count_dim)
 
 
 class LSB_quant_extracting(Extractor):
     """
-    Реализация алгоритма извлечения из НЗБ вложения, погруженного методом квантования.
+    Реализация алгоритма извлечения из НЗБ вложения, погруженного методом квантования (quant).
     Получает из свойства родителя params параметр работы:
     {'start_position': 42}
         место начала погружения
@@ -95,18 +87,13 @@ class LSB_quant_extracting(Extractor):
         # получаем параметры работы алгоритма
         start_position = (self.params or {}).get('start_position', default_start_position)
         key = (self.params or {}).get('key', default_key)
-        # получаем цветовые составляющие изображения
-        if self.stego_object is None: return
-        stego_red = concatenate(self.stego_object[:, :, 0])
-        stego_green = concatenate(self.stego_object[:, :, 1])
-        stego_blue = concatenate(self.stego_object[:, :, 2])
-        # собираем все цветовые составляющие в одну вектор-строку байт
-        stego_vect = concatenate([stego_red, stego_green, stego_blue])
 
-        stego_len = len(stego_vect)
+        # получаем стеганограмму в виде вектор-строки байт
+        stego_vect, stego_len = img_arr_to_vect(self.stego_object)[0:2]
+        if stego_vect is None: return
+        
         # резервируем место под вложение
         self.message_bits = zeros(stego_len, dtype=uint8)
-
         z = start_position
         i = 0
         while z <= stego_len:

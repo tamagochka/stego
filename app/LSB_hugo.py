@@ -550,7 +550,7 @@ class HugoAlgProbabilityExtractor(object):
 
 class LSB_hugo_embedding(Embedder):
     """
-    Реализация алгоритма погружения в НЗБ HUGO (High Undetectable steGO)
+    Реализация алгоритма погружения в НЗБ HUGO (High Undetectable steGO) (hugo)
     Получает из свойства родителя params параметр работы:
     {'T': 90}
 
@@ -601,6 +601,9 @@ class LSB_hugo_embedding(Embedder):
 
 
 class LSB_hugo_extracting(Extractor):
+    """
+    (hugo)
+    """
 
     def extracting(self):
         if self.stego_object is None: return

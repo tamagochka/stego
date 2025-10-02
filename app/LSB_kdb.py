@@ -18,7 +18,7 @@ default_sigma: int = 3
 
 class LSB_kdb_embedding(Embedder):
     """
-    Реализация алгоритма погружения в НЗБ с использованием метода Куттера-Джордана-Боссена.
+    Реализация алгоритма погружения в НЗБ с использованием метода Куттера-Джордана-Боссена (kdb).
     Получает из свойства родителя params параметр работы:
     {'key': 42}
         ключ на основе которого генерируются ПСЧ для определения координат места погружения бит вложения
@@ -33,8 +33,10 @@ class LSB_kdb_embedding(Embedder):
         key = (self.params or {}).get('key', default_key)
         luminance = (self.params or {}).get('luminance', default_luminance)
         repeats = (self.params or {}).get('repeats', default_repeats)
+
         # инициализация генератора случайных чисел на основе ключа
         mstw = MersenneTwister(key)
+
         # стеганограмма - копия покрывающего объекта с измененными пикселями
         if self.cover_object is None: return
         self.stego_object = copy(self.cover_object)
@@ -42,7 +44,6 @@ class LSB_kdb_embedding(Embedder):
         # погружение
         if self.message_bits is None: return
         message_len = len(self.message_bits)
-
         for i in range(message_len):
             for _ in range(repeats):
                 # генерируем координаты пикселя в который будет производиться погружение
@@ -66,7 +67,7 @@ class LSB_kdb_embedding(Embedder):
 
 class LSB_kdb_extracting(Extractor):
     """
-    Реализация алгоритма извлечения из НЗБ вложения, погруженного с использованием метода Куттера-Джордана-Боссена.
+    Реализация алгоритма извлечения из НЗБ вложения, погруженного с использованием метода Куттера-Джордана-Боссена (kdb).
     Получает из свойства родителя params параметр работы:
     {'key': 42}
         ключ на основе которого генерируются ПСЧ для определения координат места погружения бит вложения
@@ -84,6 +85,7 @@ class LSB_kdb_extracting(Extractor):
         repeats = (self.params or {}).get('repeats', default_repeats)
         sigma = (self.params or {}).get('sigma', default_sigma)
         end_label = (self.params or {}).get('end_label', default_end_label)
+        
         # резервируем место под битовую вектор-строку вложения
         if self.stego_object is None: return
         message_len = self.stego_object.shape[0] * self.stego_object.shape[1]
