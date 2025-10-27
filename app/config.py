@@ -1,6 +1,7 @@
 import os, sys, logging
 from logging import handlers
 from dataclasses import dataclass
+from typing import Dict, Any, cast, List
 
 import toml
 
@@ -135,8 +136,8 @@ class AppConfig(object):
             return
         if os.path.exists(config_file):
             self.config_file = config_file
-            conf = toml.load(self.config_file)
-            logging_conf = conf.get('logging', None)
+            conf = cast(Dict[str, Dict[str, Any]], toml.load(self.config_file))  # type: ignore
+            logging_conf = cast(Dict[str, Any], conf.get('logging', None))
             if logging_conf:
                 log_level = logging_conf.get('log_level', None)
                 if log_level:
@@ -148,7 +149,7 @@ class AppConfig(object):
                 self.log_file_dir = logging_conf.get('log_file_dir', self.log_file_dir)
                 self.log_file_max_bytes = logging_conf.get('log_file_max_bytes', self.log_file_max_bytes)
                 self.log_files_count = logging_conf.get('log_files_count', self.log_files_count)
-            files_conf = conf.get('files', None)
+            files_conf = cast(Dict[str, Any], conf.get('files', None))
             if files_conf:
                 self.extracts_folder = files_conf.get('extracts_folder', self.extracts_folder)
                 self.covers_folder = files_conf.get('covers_folder', self.covers_folder)
@@ -186,7 +187,7 @@ class AppConfig(object):
         if self.log_to_file:
             if not os.path.isdir(self.log_file_dir):
                 os.makedirs(self.log_file_dir)
-        handlers_list = []
+        handlers_list: List[logging.Handler] = []
         if self.log_to_console:
             handlers_list.append(logging.StreamHandler(stream=sys.stdout))
         else:
