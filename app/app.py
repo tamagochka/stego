@@ -1,6 +1,7 @@
 import sys, logging, argparse
 from argparse import Namespace
 from dataclasses import dataclass
+from typing import Dict
 
 
 from .config import AppConfig
@@ -41,6 +42,7 @@ class App(object):
         cover_file_path = self.config.get_covers_file_path(self.args.cover) if self.args.cover else None
         stego_file_path = self.config.get_stegos_file_path(self.args.stego) if self.args.stego else None
         message_file_path = self.config.get_messages_file_path(self.args.message) if self.args.message else None
+        key_file_path = self.config.get_keys_file_path(self.args.key) if self.args.key else None
         if not cover_file_path:
             logging.error(f'Ошибка пути к покрывающим объектам: \'{cover_file_path}\'')
             sys.exit()
@@ -55,7 +57,7 @@ class App(object):
         params = None
         if self.args.params:
             params = eval(f'dict({self.args.params})')
-        embedding_algorithms = {
+        embedding_algorithms: Dict[str, type] = {
             'lsb': LSB_embedding,
             'pri': LSB_PRI_embedding,
             'prp': LSB_PRP_embedding,
@@ -65,7 +67,8 @@ class App(object):
             'hugo': LSB_hugo_embedding
         }
         emedder = embedding_algorithms[algorithm]()
-        emedder.process_one_file(cover_file_path, stego_file_path, message_file_path, **params if params else {})  # распаковываем параметры из словаря, если они были переданы
+        # распаковываем параметры из словаря, если они были переданы
+        emedder.process_one_file(cover_file_path, stego_file_path, message_file_path, key_file_path, **params if params else {})
 
 
     def extracting(self):
@@ -83,6 +86,7 @@ class App(object):
             sys.exit()
         stego_file_path = self.config.get_stegos_file_path(self.args.stego) if self.args.stego else None
         extract_file_path = self.config.get_extracts_file_path()
+        key_file_path = self.config.get_keys_file_path(self.args.key) if self.args.key else None
         algorithm = self.args.algorithm
         params = None
         if self.args.params:
@@ -90,7 +94,7 @@ class App(object):
         if not stego_file_path:
             logging.error(f'Ошибка пути к стеганограммам: \'{stego_file_path}\'')
             sys.exit()
-        extracting_algorithms = {
+        extracting_algorithms: Dict[str, type] = {
             'lsb': LSB_extracting,
             'pri': LSB_PRI_extracting,
             'prp': LSB_PRP_extracting,
@@ -100,7 +104,8 @@ class App(object):
             'hugo': LSB_hugo_extracting
         }
         extractor = extracting_algorithms[algorithm]()
-        extractor.process_one_file(stego_file_path, extract_file_path, **params if params else {})  # распаковываем параметры из словаря, если они были переданы
+        # распаковываем параметры из словаря, если они были переданы
+        extractor.process_one_file(stego_file_path, extract_file_path, key_file_path, **params if params else {})
 
 
     def analysing(self):
@@ -131,7 +136,8 @@ class App(object):
         analysing_algorithms = {
             'visual': visual_attack
         }
-        analysing_algorithms[algorithm](stego_file_path, result_file_path, **params if params else {})  # распаковываем параметры из словаря, если они были переданы
+        # распаковываем параметры из словаря, если они были переданы
+        analysing_algorithms[algorithm](stego_file_path, result_file_path, **params if params else {})
 
 
     def parser_init(self):
@@ -143,8 +149,9 @@ class App(object):
         self.available_args_for_extracting = ['config']
         self.available_args_for_analysing = ['config']
         self.subparsers = {}
-
-
+        #################################################
+        #   параметры командной строки для погружения   #
+        #################################################
         parser_embedding = subparsers.add_parser('embedding', help='Погружение информации.', formatter_class=argparse.RawTextHelpFormatter)
         self.subparsers.update({'embedding': parser_embedding})
         parser_embedding.add_argument('-a', '--algorithm', type=str,
@@ -180,9 +187,13 @@ class App(object):
         self.available_args_for_embedding.append('message')
         parser_embedding.add_argument('-s', '--stego', type=str, help='Путь к файлу - стеганограмме результату погруженния вложения в покрывающий объект.')
         self.available_args_for_embedding.append('stego')
+        parser_embedding.add_argument('-k', '--key', type=str, help='Путь к файлу-ключу, который указывает места погружения вложения в стеганограмме, необходим для дальнейшего извлечения вложения.')
+        self.available_args_for_embedding.append('key')
         parser_embedding.set_defaults(func=self.embedding)
 
-
+        #################################################
+        #   параметры командной строки для извлечения   #
+        #################################################
         parser_extracting = subparsers.add_parser('extracting', help='Извлечение информации.', formatter_class=argparse.RawTextHelpFormatter)
         self.subparsers.update({'extracting': parser_extracting})
         parser_extracting.add_argument('-a', '--algorithm', type=str,
@@ -209,9 +220,13 @@ class App(object):
         parser_extracting.add_argument('-s', '--stego', type=str, help='Стеганограмма из которой осуществляется извлечение вложения (скрытой в ней информации). ' \
                                 'Поддерживаемые типы файлов: bmp.')
         self.available_args_for_extracting.append('stego')
+        parser_extracting.add_argument('-k', '--key', type=str, help='Путь к файлу-ключу, который указывает места погружения вложения в стеганограмме.')
+        self.available_args_for_extracting.append('key')
         parser_extracting.set_defaults(func=self.extracting)
 
-
+        ################################################
+        #    параметры командной строки для анализа    #
+        ################################################
         parser_analysing = subparsers.add_parser('analysing', help='Стеганографический анализ.', formatter_class=argparse.RawTextHelpFormatter)
         self.subparsers.update({'analysing': parser_analysing})
         parser_analysing.add_argument('-a', '--algorithm', type=str, help='Алгоритм, используемый для анализа. ' \

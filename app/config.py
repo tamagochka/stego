@@ -89,6 +89,8 @@ class AppConfig(object):
         дирктороия с вложениями
     analysis_folder: str = None
         директория с результатами стегоанализа
+    keys_folder: str = None
+        директория в которую сохраняются ключи, необходимые для извлечения вложений из стеганограмм
     Если заданы директории для хранения данных, то программа будет искать и сохранять файлы в них, иначе будет использоваться путь, заданный пользователем.
 
     Methods
@@ -105,6 +107,8 @@ class AppConfig(object):
         получить путь к вложению
     get_analysis_file_path(self, file_name: str | None = None) -> str
         получить путь по которому будут сохранены результаты стегоанализа
+    get_keys_file_path(self, file_name: str | None = None) -> str
+        получить путь по которому сохраняются ключи, необходимые для извлечения вложений из стеганограмм
     """
 
     config_file: str | None = None
@@ -123,6 +127,7 @@ class AppConfig(object):
     stegos_folder: str | None = None
     messages_folder: str | None = None
     analysis_folder: str | None = None
+    keys_folder: str | None = None
 
 
     def __init__(self, config_file: str | None):
@@ -150,6 +155,7 @@ class AppConfig(object):
                 self.stegos_folder = files_conf.get('stegos_folder', self.stegos_folder)
                 self.messages_folder = files_conf.get('messages_folder', self.messages_folder)
                 self.analysis_folder = files_conf.get('analysis_folder', self.analysis_folder)
+                self.keys_folder = files_conf.get('keys_folder', self.keys_folder)
 
 
     def __str__(self):
@@ -203,6 +209,7 @@ class AppConfig(object):
         check_dir(self.stegos_folder)
         check_dir(self.messages_folder)
         check_dir(self.analysis_folder)
+        check_dir(self.keys_folder)
    
 
     def get_extracts_file_path(self, file_name: str | None = None) -> str:
@@ -213,6 +220,7 @@ class AppConfig(object):
         ----------
         file_name: str | None = None
             имя файла для которого будет возвращен путь
+
         Returns
         -------
         str
@@ -230,6 +238,7 @@ class AppConfig(object):
         ----------
         file_name: str | None = None
             имя файла для которого будет возвращен путь
+
         Returns
         -------
         str
@@ -247,6 +256,7 @@ class AppConfig(object):
         ----------
         file_name: str | None = None
             имя файла для которого будет возвращен путь
+
         Returns
         -------
         str
@@ -264,6 +274,7 @@ class AppConfig(object):
         ----------
         file_name: str | None = None
             имя файла для которого будет возвращен путь
+
         Returns
         -------
         str
@@ -281,6 +292,7 @@ class AppConfig(object):
         ----------
         file_name: str | None = None
             имя файла для которого будет возвращен путь
+
         Returns
         -------
         str
@@ -288,6 +300,24 @@ class AppConfig(object):
         """
 
         return get_file_path(self.analysis_folder, file_name)
+    
+
+    def get_keys_file_path(self, file_name: str | None = None) -> str:
+        """
+        Получить путь по которому сохраняются ключи, необходимые для извлечения вложений из стеганограмм.
+
+        Parameters
+        ----------
+        file_name: str | None = None
+            имя файла для которого будет возвращен путь
+
+        Returns
+        -------
+        str
+            путь к файлу
+        """
+
+        return get_file_path(self.keys_folder, file_name)
 
 
 if __name__ == '__main__':

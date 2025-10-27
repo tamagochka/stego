@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 
 from PIL import Image
 from numpy.typing import NDArray
-from numpy import uint8, asarray
+from numpy import uint8, asarray, fromfile, unpackbits
 
 from .utils import from_bit_vector, bytes2chars, chars2bytes
 from .config import default_start_label, default_end_label
@@ -20,6 +20,7 @@ class Extractor(ABC):
     message_object: NDArray[uint8] | None = None
     message_bits: NDArray[uint8] | None = None
     message_file_name: str | None = None
+    extraction_key: NDArray[uint8] | None = None
     params: dict[str, Any] | None = None
 
 
@@ -101,9 +102,29 @@ class Extractor(ABC):
         with open(message_file_path, 'bw') as F:
             F.write(self.message_object)
         return True
-    
 
-    def process_one_file(self, strgo_file_path: str, extract_file_path: str, **params: dict[str, Any]):
+
+    def load_key_file(self, key_file_path: str):
+        """
+        Загружает файл с ключем, который указывает места погружения вложения в стеганограмму.
+
+        Parameters
+        ----------
+            key_file_path: str
+                имя/путь к файлу с ключом
+        """
+
+        # загрузка ключа из бинарного файла
+        self.extraction_key = unpackbits(fromfile(key_file_path, dtype=uint8))
+
+
+    def process_one_file(
+            self,
+            strgo_file_path: str,
+            extract_file_path: str,
+            key_file_path: str | None = None,
+            **params: dict[str, Any]
+    ):
         """
         Извлечь одно вложение из одной стеганограммы.
 
@@ -113,6 +134,8 @@ class Extractor(ABC):
             имя/путь к файлу стеганограммы
         extract_file_path: str
             путь к файлу вложения (только директория)
+        key_file_path: str
+            путь к файлу с ключом, который указывает места погружения вложения в стеганограмму
         **params: dict[str, Any]
             параметры извлечения вложения, зависят от используемого алгоритма.
             У всех алгоритмов есть параметры:
@@ -122,6 +145,8 @@ class Extractor(ABC):
 
         self.set_params(**params)
         self.load_stego_file(strgo_file_path)
+        if key_file_path is not None:
+            self.load_key_file(key_file_path)
         self.extracting()
         if not self.extract_message_object(): return
         self.save_message_file(extract_file_path)

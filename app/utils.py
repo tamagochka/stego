@@ -456,8 +456,6 @@ def one_arr_to_img_arr_surfs(one_arr: NDArray[uint8], red_width: int=0, green_wi
         return img_arr
 
 
-
-
 def img_arr_to_vect(img_arr: NDArray[uint8] | None) -> tuple[NDArray[uint8] | None, int, int, int]:
     """
     Преобразование массива, содержащего значения цветовых компонент (для цветного)

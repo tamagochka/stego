@@ -69,7 +69,6 @@ class LSB_embedding(Embedder):
 
 class LSB_extracting(Extractor):
     """
-    lsb
     Реализация алгоритма извлечения из НЗБ вложения, погруженного с использованием непрерывного замещения бит (lsb).
     """
 

@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 
 from PIL import Image
 from numpy.typing import NDArray
-from numpy import asarray, uint8, fromfile, concatenate
+from numpy import asarray, uint8, fromfile, concatenate, packbits
 
 from .utils import chars2bytes, to_bit_vector
 from .config import default_start_label, default_end_label
@@ -20,6 +20,7 @@ class Embedder(ABC):
     cover_object: NDArray[uint8] | None = None
     message_object: NDArray[uint8] | None = None
     stego_object: NDArray[uint8] | None = None
+    extraction_key: NDArray[uint8] | None = None
     message_file_name: str | None = None
     message_bits: NDArray[uint8] | None = None
     params: dict[str, Any] | None = None
@@ -126,7 +127,29 @@ class Embedder(ABC):
                 F.save(stego_file_path)
 
 
-    def process_one_file(self, cover_file_path: str, stego_file_path: str, message_file_path: str | None, **params: dict[str, Any]):
+    def save_key_file(self, key_file_path: str):
+        """
+        Сохраняет ключ, необходимый для извлечения вложения из стеганограммы в файл.
+
+        Parameters
+        ----------
+        key_file_path: str
+            имя/путь к файлу ключа
+        """
+        
+        # сохранение ключа в бинарный файл
+        if self.extraction_key is not None:
+            packbits(self.extraction_key).tofile(key_file_path)
+
+
+    def process_one_file(
+            self,
+            cover_file_path: str,
+            stego_file_path: str,
+            message_file_path: str | None,
+            key_file_path: str | None = None,
+            **params: dict[str, Any]
+    ):
         """
         Погрузить одно вложение в один файл.
 
@@ -138,8 +161,10 @@ class Embedder(ABC):
             имя/путь к стеганограмме, результату погружения вложения в покрывающий объект
         message_file_path: str
             имя/путь к файлу вложения
+        key_file_path: str
+            имя/путь к файлу с ключем, необходимым для извлечения вложения из стеганограммы
         **params: dict[str, Any]
-            параметры погружения вложения, зависят от используемого алгоритма.
+            параметры погружения вложения, зависят от используемого алгоритма
             У всех алгоритмов есть параметры:
             - start_label: str = 'H@4@l0' - метка начала места погружения;
             - end_label: str = 'k0HEU' - метка конца места погружения.
@@ -152,6 +177,8 @@ class Embedder(ABC):
             if not self.prepare_message_object(): return
         self.embeding()
         self.save_stego_file(stego_file_path)
+        if self.extraction_key is not None and key_file_path is not None:
+            self.save_key_file(key_file_path)
 
 
 if __name__ == '__main__':
