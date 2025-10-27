@@ -13,22 +13,22 @@ def visual_attack(stego_file_path: str, result_file_path: str):
     if len(stego_object.shape) < 3:
         stego_object = expand_dims(stego_object, axis=2)
 
-    fig = plt.figure()
+    fig = plt.figure()  # type: ignore
     fig.subplots_adjust(wspace=0.5)
-    ax = fig.subplots(1, stego_object.shape[2])
+    ax = fig.subplots(1, stego_object.shape[2])  # type: ignore
 
     for i in range(stego_object.shape[2]):
         color_plane = stego_object[:, :, i]
         LSB_plane = color_plane % 2
         axis = ax if stego_object.shape[2] == 1 else ax[i]
-        axis.set_title(f'plane {i}')
-        axis.imshow(LSB_plane, cmap='gray')
+        axis.set_title(f'plane {i}')  # type: ignore
+        axis.imshow(LSB_plane, cmap='gray')  # type: ignore
 
     if result_file_path:
         result_file_path = result_file_path + '.png'
-        plt.savefig(result_file_path, bbox_inches='tight', dpi=1200)
+        plt.savefig(result_file_path, bbox_inches='tight', dpi=1200)  # type: ignore
     else:
-        plt.show()
+        plt.show()  # type: ignore
 
 
 if __name__ == '__main__':
