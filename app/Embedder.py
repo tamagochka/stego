@@ -103,7 +103,7 @@ class Embedder(ABC):
 
 
     @abstractmethod
-    def embeding(self):
+    def embedding(self):
         """
         Абстрактный метод, в котором реализуется алгоритм погружения вложения классами-потомками.
         Полученная в результате работы метода стаганограмма должна быть помещена в свойство stego_object.
@@ -175,7 +175,7 @@ class Embedder(ABC):
         if message_file_path is not None:
             self.load_message_file(message_file_path)
             if not self.prepare_message_object(): return
-        self.embeding()
+        self.embedding()
         self.save_stego_file(stego_file_path)
         if self.extraction_key is not None and key_file_path is not None:
             self.save_key_file(key_file_path)

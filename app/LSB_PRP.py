@@ -24,7 +24,7 @@ class LSB_PRP_embedding(Embedder):
         количество пар ключей
     """
 
-    def embeding(self):
+    def embedding(self):
         # получаем параметры работы алгоритма
         primary_key = (self.params or {}).get('primary_key', default_primary_key)
         count_key_pairs = (self.params or {}).get('count_key_pairs', default_count_key_pairs)

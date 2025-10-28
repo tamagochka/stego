@@ -12,6 +12,7 @@ from .LSB_block import LSB_block_embedding, LSB_block_extracting
 from .LSB_quant import LSB_quant_embedding, LSB_quant_extracting
 from .LSB_kdb import LSB_kdb_embedding, LSB_kdb_extracting
 from .LSB_hugo import LSB_hugo_embedding, LSB_hugo_extracting
+from .LSB_edge import LSB_edge_embedding, LSB_edge_extracting
 from .steganalysing import visual_attack
 
 
@@ -64,7 +65,8 @@ class App(object):
             'block': LSB_block_embedding,
             'quant': LSB_quant_embedding,
             'kdb': LSB_kdb_embedding,
-            'hugo': LSB_hugo_embedding
+            'hugo': LSB_hugo_embedding,
+            'edge': LSB_edge_embedding
         }
         emedder = embedding_algorithms[algorithm]()
         # распаковываем параметры из словаря, если они были переданы
@@ -101,7 +103,8 @@ class App(object):
             'block': LSB_block_extracting,
             'quant': LSB_quant_extracting,
             'kdb': LSB_kdb_extracting,
-            'hugo': LSB_hugo_extracting
+            'hugo': LSB_hugo_extracting,
+            'edge': LSB_edge_extracting
         }
         extractor = extracting_algorithms[algorithm]()
         # распаковываем параметры из словаря, если они были переданы

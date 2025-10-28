@@ -28,7 +28,7 @@ class LSB_kdb_embedding(Embedder):
         число мест погружения каждого бита вложения
     """
 
-    def embeding(self):
+    def embedding(self):
         # получаем параметры работы алгоритма
         key = (self.params or {}).get('key', default_key)
         luminance = (self.params or {}).get('luminance', default_luminance)

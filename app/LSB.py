@@ -20,7 +20,7 @@ class LSB_embedding(Embedder):
         заполнять незаполненную часть покрывающего объекта случайными битами или нет
     """
 
-    def embeding(self):
+    def embedding(self):
         # получаем параметры работы алгоритма
         fill_rest = (self.params or {}).get('fill_rest', default_fill_rest)
 

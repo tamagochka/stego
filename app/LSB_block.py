@@ -14,7 +14,7 @@ class LSB_block_embedding(Embedder):
     Реализация алгоритма погружения в НЗБ вложения с использованием блочного погружения для большей стойкости к изменениям покрывающего объекта (block).
     """
 
-    def embeding(self):
+    def embedding(self):
         # получаем цветовые составляющие изображения
         if self.cover_object is None: return
 

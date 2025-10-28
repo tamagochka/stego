@@ -26,7 +26,7 @@ class LSB_quant_embedding(Embedder):
         заполнять незаполненную часть покрывающего объекта случайными битами или нет
     """
 
-    def embeding(self):
+    def embedding(self):
         # получаем параметры работы алгоритма
         start_position = (self.params or {}).get('start_position', default_start_position)
         key = (self.params or {}).get('key', default_key)

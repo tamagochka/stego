@@ -1088,7 +1088,7 @@ class LSB_hugo_embedding(Embedder):
         относительная полезная нагрузка для симуляции встраивания (только для симуляции)
     """
 
-    def embeding(self):
+    def embedding(self):
         # получаем параметры работы алгоритма
         action_type = (self.params or {}).get('action_type', default_action_type)
         T = (self.params or {}).get('T', default_T)
