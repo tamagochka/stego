@@ -1,8 +1,23 @@
 import sys
 from typing import Any
 
+from math import sqrt
 from numpy.typing import NDArray
-from numpy import zeros, array, uint8, uint16, concatenate, array_split, dstack, hstack
+from numpy import (
+    zeros,
+    array,
+    uint8,
+    uint16,
+    uint32,
+    concatenate,
+    array_split,
+    dstack,
+    hstack,
+    dsplit,
+    pad,
+    zeros_like,
+    max
+)
 
 
 class MersenneTwister(object):
@@ -528,6 +543,63 @@ def img_vect_to_arr(img_vect: NDArray[uint8], count_lines: int, count_dim: int) 
         img_arr = array(array_split(img_vect, count_lines))
     
     return img_arr
+
+
+def edge_detect(image: NDArray[uint8]) -> list[NDArray[uint8]] | None:
+    """
+    Выделение граней на изображении на основе оператора Прюитт.
+
+    Parameters
+    ----------
+    image: NDArray[uint8]
+        массив, содержащий значения яроксти пикселей для монохромных изображений или массивы цветовых плоскостей \
+        содержащих яркости пикселей для цветных изображений
+    Returns
+    -------
+    list[NDArray[uint8]] | None
+        цветовые полскости или полскость (для монохромных изображений) изображения к которым был применен оператор Прюитт
+    """
+
+    padded: list[NDArray[uint8]] = []
+    # если изображение имеет цветовые плоскости (не монохромное), т.е. массив,
+    # хранящий изображение, имеет дополнительное измерение для хранения цветовых плоскостей
+    if len(image.shape) > 2:
+        # разбиваем по цветовым плоскостям и добавляем отступы для каждой цветовой плоскости
+        for col in dsplit(image, image.shape[2]):
+            padded.append(pad(col.squeeze(), 1, mode='edge'))
+    else:
+        # добавляем отступ
+        padded.append(pad(image, 1, mode='edge'))
+
+    kernel_x = array([[-1, 0, 1],
+                      [-1, 0, 1],
+                      [-1, 0, 1]])
+
+    kernel_y = array([[-1, -1, -1],
+                      [0, 0, 0],
+                      [1, 1, 1]])
+        
+    prewitt: list[NDArray[uint8]] = []
+    for c in range(len(padded)):
+        grad = zeros_like(padded[c], dtype=uint32)
+        for x in range(padded[c].shape[0] - len(kernel_x) + 1):
+            for y in range(padded[c].shape[1] - len(kernel_y) + 1):
+                Gx: int = 0
+                Gy: int = 0
+                for i in range(len(kernel_x)):
+                    for j in range(len(kernel_y)):
+                        val = padded[c][x + i, y + j]
+                        Gx += kernel_x[i][j] * val
+                        Gy += kernel_y[i][j] * val
+
+                grad[x + 1, y + 1] = int(sqrt(Gx ** 2 + Gy ** 2))
+
+        grad = ((grad / max(grad)) * 255).astype(uint8)
+        unpadded = grad[1:grad.shape[0] - 1, 1:grad.shape[1] - 1]
+
+        prewitt.append(unpadded)
+
+    return prewitt
 
 
 if __name__ == '__main__':
