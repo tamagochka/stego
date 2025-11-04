@@ -225,7 +225,7 @@ def B2D(vector_bits: NDArray[uint8]) -> uint8:
     """
 
     byte = uint8(0)
-    for i in range(8):
+    for i in range(len(vector_bits)):
         byte += vector_bits[i] * pow(2, i)
     return byte
 
@@ -432,8 +432,6 @@ def img_arr_surfs_to_one_arr(img_arr: NDArray[uint8] | None) -> tuple[NDArray[ui
     elif count_dim == 2:
         one_arr = img_arr[:, :]
         return one_arr, one_arr.shape[1], 0, 0
-
-
     else:
         return None, 0, 0, 0
 
