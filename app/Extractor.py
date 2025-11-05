@@ -70,6 +70,7 @@ class Extractor(ABC):
         Затем обрезает метки начала и конца места погружения. Извлекает имя файла вложения,
         сохраняет его в свойство message_file_name. Сохраняет байты вложения в message_object.
         """
+        
         start_label = (self.params or {}).get('start_label', default_start_label)
         end_label = (self.params or {}).get('end_label', default_end_label)
         if self.message_bits is None:

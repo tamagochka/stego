@@ -1,7 +1,7 @@
 import sys, logging, argparse
 from argparse import Namespace
 from dataclasses import dataclass
-from typing import Dict
+from typing import Any
 
 
 from .config import AppConfig
@@ -13,7 +13,7 @@ from .LSB_quant import LSB_quant_embedding, LSB_quant_extracting
 from .LSB_kdb import LSB_kdb_embedding, LSB_kdb_extracting
 from .LSB_hugo import LSB_hugo_embedding, LSB_hugo_extracting
 from .LSB_edge import LSB_edge_embedding, LSB_edge_extracting
-from .steganalysing import visual_attack
+from .SGA_visual import SGA_visual
 
 
 @dataclass
@@ -55,10 +55,10 @@ class App(object):
         #     sys.exit()
         algorithm = self.args.algorithm
         # преобразуем строку параметров в словарь
-        params = None
+        params: dict[str, Any] = {}
         if self.args.params:
             params = eval(f'dict({self.args.params})')
-        embedding_algorithms: Dict[str, type] = {
+        embedding_algorithms: dict[str, type] = {
             'lsb': LSB_embedding,
             'pri': LSB_PRI_embedding,
             'prp': LSB_PRP_embedding,
@@ -90,13 +90,13 @@ class App(object):
         extract_file_path = self.config.get_extracts_file_path()
         key_file_path = self.config.get_keys_file_path(self.args.key) if self.args.key else None
         algorithm = self.args.algorithm
-        params = None
+        params: dict[str, Any] = {}
         if self.args.params:
             params = eval(f'dict({self.args.params})')
         if not stego_file_path:
             logging.error(f'Ошибка пути к стеганограммам: \'{stego_file_path}\'')
             sys.exit()
-        extracting_algorithms: Dict[str, type] = {
+        extracting_algorithms: dict[str, type] = {
             'lsb': LSB_extracting,
             'pri': LSB_PRI_extracting,
             'prp': LSB_PRP_extracting,
@@ -127,7 +127,7 @@ class App(object):
         stego_file_path = self.config.get_stegos_file_path(self.args.stego) if self.args.stego else None
         result_file_path = self.config.get_analysis_file_path(self.args.result) if self.args.result else None
         algorithm = self.args.algorithm
-        params = None
+        params: dict[str, Any] = {}
         if self.args.params:
             params = eval(f'dict({self.args.params})')
         if not stego_file_path:
@@ -137,10 +137,11 @@ class App(object):
             logging.error(f'Ошибка пути к результатам анализа: \'{result_file_path}\'')
             sys.exit()
         analysing_algorithms = {
-            'visual': visual_attack
+            'visual': SGA_visual
         }
+        analyzer = analysing_algorithms[algorithm]()
         # распаковываем параметры из словаря, если они были переданы
-        analysing_algorithms[algorithm](stego_file_path, result_file_path, **params if params else {})
+        analyzer.process_one_file(stego_file_path, result_file_path, **params if params else {})
 
 
     def parser_init(self):
