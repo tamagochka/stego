@@ -13,6 +13,7 @@ from .LSB_quant import LSB_quant_embedding, LSB_quant_extracting
 from .LSB_kdb import LSB_kdb_embedding, LSB_kdb_extracting
 from .LSB_hugo import LSB_hugo_embedding, LSB_hugo_extracting
 from .LSB_edge import LSB_edge_embedding, LSB_edge_extracting
+from .LSB_BHC import LSB_bhc_embedding, LSB_bhc_extracting
 from .SGA_visual import SGA_visual
 
 
@@ -66,7 +67,8 @@ class App(object):
             'quant': LSB_quant_embedding,
             'kdb': LSB_kdb_embedding,
             'hugo': LSB_hugo_embedding,
-            'edge': LSB_edge_embedding
+            'edge': LSB_edge_embedding,
+            'bhc': LSB_bhc_embedding
         }
         emedder = embedding_algorithms[algorithm]()
         # распаковываем параметры из словаря, если они были переданы
@@ -104,7 +106,8 @@ class App(object):
             'quant': LSB_quant_extracting,
             'kdb': LSB_kdb_extracting,
             'hugo': LSB_hugo_extracting,
-            'edge': LSB_edge_extracting
+            'edge': LSB_edge_extracting,
+            'bhc': LSB_bhc_extracting
         }
         extractor = extracting_algorithms[algorithm]()
         # распаковываем параметры из словаря, если они были переданы

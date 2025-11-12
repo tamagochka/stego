@@ -20,6 +20,14 @@ from numpy import (
 )
 
 
+BE: int = 1
+LE: int = 0
+"""
+Порядок бит big-endian (BE) от старшего бита к младшему слева на право, \
+little-endian (LE) от младшего бита к старшему слева на право
+"""
+
+
 class MersenneTwister(object):
     """
     Генератор псевдослучайных чисел на основе алгоритма "Вихрь Мерсена".
@@ -230,26 +238,35 @@ def B2D(vector_bits: NDArray[uint8]) -> uint8:
     return byte
 
 
-def D2B(byte: uint8) -> NDArray[uint8]:
+def D2B(byte: uint8, basis: int = 2, strip: bool = False, endianness: int = LE) -> NDArray[uint8]:
     """
-    Перевод числа из десятичного байта в двоичную вектор-строку.
+    Перевод числа из десятичного байта в basis-ичную вектор-строку.
 
     Parameters
     ----------
     byte: uint8
         десятичный байт
+    basis: int = 2
+        основание системы счисления в которую переводится байт
+    strip: bool = False
+        обрезать не значащие нули при переводе
+    endianness: int = LE = 0
+        порядок бит big-endian (BE) от старшего бита к младшему слева на право, \
+        little-endian (LE) от младшего бита к старшему слева на право
     
     Returns
     -------
     NDArray[uint8]
-        двоичная вектор-строка длинной 8 символов
+        basis-ичная вектор-строка
     """
     
-    vector_bits = zeros(8, dtype=uint8)
-    for i in range(8):
-        vector_bits[i] = byte % 2
-        byte = byte // 2
-    return vector_bits
+    vector_bits: list[int] = []
+    for _ in range(8):
+        vector_bits.append(byte % basis)
+        byte = byte // basis
+        if strip and byte == 0:
+            return array(vector_bits) if not endianness else array(vector_bits)[::-1]
+    return array(vector_bits) if not endianness else array(vector_bits)[::-1]
 
 
 def to_bit_vector(vector_bytes: NDArray[uint8]) -> NDArray[uint8]:
@@ -480,10 +497,10 @@ def img_arr_to_vect(img_arr: NDArray[uint8] | None) -> tuple[NDArray[uint8] | No
         массив, содержащий значения цветовых компонент или яркости для каждого пикселя изображения
     Returns
     -------
-    tuple[NDArray[uint8] | None, int, int]
+    tuple[NDArray[uint8] | None, int, int, int]
         img_vect : NDArray[uint8] | None
             вектор-строка байт, полученная из входного массива
-        cover_len : int
+        len : int
             длина вектор-строки байт
         count_lines : int
             количество строк, которые были в исходном массиве
