@@ -90,7 +90,6 @@ class LSB_bhc_embedding(Embedder):
         self.stego_object = img_vect_to_arr(stego_vect, count_lines, count_dim)
 
 
-
 class LSB_bhc_extracting(Extractor):
     """
     Реализация алгоритма извлечения из НЗБ вложения, погруженного с использованием двоичных кодов Хэмминга (bhc).
@@ -123,6 +122,7 @@ class LSB_bhc_extracting(Extractor):
             message_bits += m_chunk.tolist()
 
         self.message_bits = array(message_bits)
+
 
 if __name__ == "__main__":
     sys.exit()
